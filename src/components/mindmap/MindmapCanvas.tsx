@@ -625,7 +625,7 @@ export const MindmapCanvas = ({
       
       {/* Transform container */}
       <div
-        className={cn("absolute origin-top-left", isSelecting && "select-none")}
+        className="absolute origin-top-left select-none"
         style={{
           transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
         }}
@@ -634,7 +634,6 @@ export const MindmapCanvas = ({
         <svg
           className="absolute"
           style={{
-            pointerEvents: isSelecting ? 'none' : 'auto',
             left: -2000,
             top: -2000,
             width: 4000,
