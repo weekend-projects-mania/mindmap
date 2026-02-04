@@ -1,11 +1,99 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useMindmapStore } from "@/hooks/useMindmapStore";
+import { MindmapSidebar } from "@/components/mindmap/MindmapSidebar";
+import { MindmapCanvas } from "@/components/mindmap/MindmapCanvas";
+import { RichEditor } from "@/components/editor/RichEditor";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable";
+import { Brain } from "lucide-react";
 
 const Index = () => {
+  const {
+    mindmaps,
+    activeMindmap,
+    activeMindmapId,
+    selectedNodeId,
+    selectedNode,
+    setActiveMindmap,
+    setSelectedNodeId,
+    createMindmap,
+    deleteMindmap,
+    renameMindmap,
+    updateNode,
+    addChildNode,
+    deleteNode,
+    moveNode,
+    toggleCollapse,
+  } = useMindmapStore();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="h-screen flex overflow-hidden bg-background">
+      {/* Sidebar */}
+      <MindmapSidebar
+        mindmaps={mindmaps}
+        activeMindmapId={activeMindmapId}
+        onSelectMindmap={setActiveMindmap}
+        onCreateMindmap={createMindmap}
+        onDeleteMindmap={deleteMindmap}
+        onRenameMindmap={renameMindmap}
+      />
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {activeMindmap ? (
+          <ResizablePanelGroup direction="horizontal" className="flex-1">
+            {/* Mindmap canvas */}
+            <ResizablePanel defaultSize={60} minSize={30}>
+              <MindmapCanvas
+                mindmap={activeMindmap}
+                selectedNodeId={selectedNodeId}
+                onSelectNode={setSelectedNodeId}
+                onAddChild={addChildNode}
+                onDeleteNode={deleteNode}
+                onUpdateNode={updateNode}
+                onToggleCollapse={toggleCollapse}
+                onMoveNode={moveNode}
+              />
+            </ResizablePanel>
+
+            <ResizableHandle withHandle />
+
+            {/* Editor panel */}
+            <ResizablePanel defaultSize={40} minSize={25}>
+              {selectedNode ? (
+                <RichEditor
+                  key={selectedNodeId}
+                  content={selectedNode.content}
+                  onChange={(content) =>
+                    updateNode(selectedNodeId!, { content })
+                  }
+                  nodeTitle={selectedNode.title}
+                  onTitleChange={(title) =>
+                    updateNode(selectedNodeId!, { title })
+                  }
+                />
+              ) : (
+                <div className="h-full flex items-center justify-center text-muted-foreground">
+                  <p>Select a node to edit its content</p>
+                </div>
+              )}
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center space-y-4">
+              <Brain className="h-16 w-16 mx-auto text-muted-foreground/50" />
+              <div>
+                <h2 className="text-xl font-semibold">No Mindmap Selected</h2>
+                <p className="text-muted-foreground">
+                  Create or select a mindmap to get started
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
