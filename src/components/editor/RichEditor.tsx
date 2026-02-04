@@ -9,6 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -119,6 +120,28 @@ const FloatingToolbar = ({ editor }: { editor: Editor }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           <DropdownMenuItem 
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            className={editor.isActive("bold") ? "bg-accent" : ""}
+          >
+            <Bold className="h-4 w-4 mr-2" />
+            Bold
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            className={editor.isActive("italic") ? "bg-accent" : ""}
+          >
+            <Italic className="h-4 w-4 mr-2" />
+            Italic
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            className={editor.isActive("strike") ? "bg-accent" : ""}
+          >
+            <Strikethrough className="h-4 w-4 mr-2" />
+            Strikethrough
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
             className={editor.isActive("heading", { level: 1 }) ? "bg-accent" : ""}
           >
@@ -212,34 +235,6 @@ const FloatingToolbar = ({ editor }: { editor: Editor }) => {
   );
 };
 
-// Bubble menu for text formatting (shows when text is selected)
-const TextFormatButtons = ({ editor }: { editor: Editor }) => {
-  return (
-    <div className="flex items-center gap-0.5">
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleBold().run()}
-        isActive={editor.isActive("bold")}
-        title="Bold"
-      >
-        <Bold className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        isActive={editor.isActive("italic")}
-        title="Italic"
-      >
-        <Italic className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleStrike().run()}
-        isActive={editor.isActive("strike")}
-        title="Strikethrough"
-      >
-        <Strikethrough className="h-4 w-4" />
-      </ToolbarButton>
-    </div>
-  );
-};
 
 export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: RichEditorProps) => {
   const [title, setTitle] = useState(nodeTitle);
@@ -311,10 +306,6 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: Rich
             placeholder="Node title..."
           />
 
-          {/* Inline text formatting buttons */}
-          <div className="mb-4 border-b pb-3">
-            <TextFormatButtons editor={editor} />
-          </div>
 
           {/* Editor content */}
           <EditorContent editor={editor} className="h-full" />
