@@ -297,7 +297,13 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange, startL
 
           {/* Start Link property */}
           <div className="flex items-center gap-2 mb-6 text-muted-foreground">
-            <LinkIcon className="h-4 w-4 shrink-0" />
+            {link && /^https?:\/\/.+/.test(link) ? (
+              <a href={link} target="_blank" rel="noopener noreferrer" className="shrink-0 hover:text-primary">
+                <LinkIcon className="h-4 w-4" />
+              </a>
+            ) : (
+              <LinkIcon className="h-4 w-4 shrink-0" />
+            )}
             <span className="text-sm font-medium shrink-0">Start Link</span>
             <Input
               value={link}
