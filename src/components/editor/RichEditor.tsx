@@ -77,10 +77,6 @@ const FloatingToolbar = ({ editor }: { editor: Editor }) => {
           <DropdownMenuItem onClick={() => editor.chain().focus().setHorizontalRule().run()}>
             Horizontal Rule
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().toggleCodeBlock().run()}>
-            <Code2 className="h-4 w-4 mr-2" />
-            Code Block
-          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => editor.chain().focus().toggleBlockquote().run()}>
             <Quote className="h-4 w-4 mr-2" />
             Quote
@@ -170,6 +166,13 @@ const FloatingToolbar = ({ editor }: { editor: Editor }) => {
         title="Inline Code"
       >
         <Code className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+        isActive={editor.isActive("codeBlock")}
+        title="Code Block"
+      >
+        <Code2 className="h-4 w-4" />
       </ToolbarButton>
 
 
