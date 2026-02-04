@@ -26,13 +26,11 @@ import {
   Italic,
   Strikethrough,
   Code,
-  Heading1,
   Heading2,
   Heading3,
   List,
   ListOrdered,
   Quote,
-  Link as LinkIcon,
   Code2,
   Plus,
   Type,
@@ -131,13 +129,6 @@ const FloatingToolbar = ({ editor }: { editor: Editor }) => {
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem 
-            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-            className={editor.isActive("heading", { level: 1 }) ? "bg-accent" : ""}
-          >
-            <Heading1 className="h-4 w-4 mr-2" />
-            Heading 1
-          </DropdownMenuItem>
-          <DropdownMenuItem 
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             className={editor.isActive("heading", { level: 2 }) ? "bg-accent" : ""}
           >
@@ -201,7 +192,7 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: Rich
     extensions: [
       StarterKit.configure({
         heading: {
-          levels: [1, 2, 3],
+          levels: [2, 3],
         },
         codeBlock: false, // Disable default codeBlock in favor of lowlight version
       }),
@@ -274,7 +265,7 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: Rich
       {/* Editor content area with title */}
       <div className="flex-1 overflow-auto flex justify-center pb-20">
         <div className="w-full max-w-2xl px-6 pt-8">
-          {/* Large node title */}
+          {/* Large node title styled as H1 */}
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -285,7 +276,7 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: Rich
                 (e.target as HTMLInputElement).blur();
               }
             }}
-            className="text-3xl font-bold border-none shadow-none focus-visible:ring-0 px-0 h-auto mb-4"
+            className="text-4xl font-bold border-none shadow-none focus-visible:ring-0 px-0 h-auto mb-6 leading-tight"
             placeholder="Node title..."
           />
 
