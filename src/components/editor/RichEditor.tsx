@@ -216,6 +216,14 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: Rich
       attributes: {
         class: "prose prose-sm max-w-none focus:outline-none min-h-[200px] p-6 pt-0",
       },
+      handleKeyDown: (view, event) => {
+        if (event.key === "Tab" && editor?.isActive("codeBlock")) {
+          event.preventDefault();
+          editor?.commands.insertContent("\t");
+          return true;
+        }
+        return false;
+      },
     },
   });
 
