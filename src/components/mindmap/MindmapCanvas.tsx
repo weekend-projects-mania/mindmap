@@ -11,6 +11,7 @@ interface MindmapCanvasProps {
   selectedNodeId: string | null;
   onSelectNode: (nodeId: string) => void;
   onAddChild: (parentId: string) => void;
+  onAddSibling: (nodeId: string) => void;
   onDeleteNode: (nodeId: string) => void;
   onUpdateNode: (nodeId: string, updates: Partial<MindmapNode>) => void;
   onToggleCollapse: (nodeId: string) => void;
@@ -38,6 +39,7 @@ export const MindmapCanvas = ({
   selectedNodeId,
   onSelectNode,
   onAddChild,
+  onAddSibling,
   onDeleteNode,
   onUpdateNode,
   onToggleCollapse,
@@ -114,6 +116,33 @@ export const MindmapCanvas = ({
       });
     }
   }, [mindmap.id]);
+
+  // Keyboard shortcuts for adding nodes
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input or textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+        return;
+      }
+
+      // Only handle when a node is selected (not floating note)
+      if (!selectedNodeId || selectedNodeId.startsWith("floating:")) {
+        return;
+      }
+
+      if (e.key === "Enter") {
+        e.preventDefault();
+        onAddSibling(selectedNodeId);
+      } else if (e.key === "Tab") {
+        e.preventDefault();
+        onAddChild(selectedNodeId);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedNodeId, onAddChild, onAddSibling]);
 
   // Pan handlers
   const handleMouseDown = (e: React.MouseEvent) => {
