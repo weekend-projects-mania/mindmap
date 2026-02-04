@@ -256,20 +256,22 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: Rich
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Node title */}
-      <div className="border-b p-4">
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onBlur={handleTitleBlur}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              handleTitleBlur();
-              (e.target as HTMLInputElement).blur();
-            }
-          }}
-          className="text-xl font-semibold border-none shadow-none focus-visible:ring-0 px-0 h-auto"
-          placeholder="Node title..."
-        />
+      <div className="border-b p-4 flex justify-center">
+        <div className="w-full max-w-xl">
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onBlur={handleTitleBlur}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleTitleBlur();
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+            className="text-xl font-semibold border-none shadow-none focus-visible:ring-0 px-0 h-auto"
+            placeholder="Node title..."
+          />
+        </div>
       </div>
 
       {/* Toolbar */}
