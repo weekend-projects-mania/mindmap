@@ -297,27 +297,32 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange, startL
 
           {/* Start Link property */}
           <div className="flex items-center gap-2 mb-6 text-muted-foreground">
+            <LinkIcon className="h-4 w-4 shrink-0" />
+            <span className="text-sm font-medium shrink-0">Start Link</span>
             {link && /^https?:\/\/.+/.test(link) ? (
-              <a href={link} target="_blank" rel="noopener noreferrer" className="shrink-0 hover:text-primary">
-                <LinkIcon className="h-4 w-4" />
+              <a 
+                href={link} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-sm text-primary hover:underline truncate"
+              >
+                {link}
               </a>
             ) : (
-              <LinkIcon className="h-4 w-4 shrink-0" />
+              <Input
+                value={link}
+                onChange={(e) => setLink(e.target.value)}
+                onBlur={handleLinkBlur}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleLinkBlur();
+                    (e.target as HTMLInputElement).blur();
+                  }
+                }}
+                className="h-auto py-0 px-1 text-sm border-none shadow-none focus-visible:ring-0 text-foreground"
+                placeholder="https://..."
+              />
             )}
-            <span className="text-sm font-medium shrink-0">Start Link</span>
-            <Input
-              value={link}
-              onChange={(e) => setLink(e.target.value)}
-              onBlur={handleLinkBlur}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleLinkBlur();
-                  (e.target as HTMLInputElement).blur();
-                }
-              }}
-              className="h-auto py-0 px-1 text-sm border-none shadow-none focus-visible:ring-0 text-foreground"
-              placeholder="https://..."
-            />
           </div>
 
 
