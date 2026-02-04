@@ -122,6 +122,16 @@ export const MindmapCanvas = ({
     }
   };
 
+  // Click on empty space to deselect
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    if (e.target === containerRef.current || (e.target as HTMLElement).classList.contains('canvas-background')) {
+      // Deselect floating notes (keep tree node selection for editor)
+      if (selectedNodeId?.startsWith("floating:")) {
+        onSelectNode(mindmap.rootNodeId);
+      }
+    }
+  };
+
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isPanning) {
       setTransform((prev) => ({
@@ -349,6 +359,7 @@ export const MindmapCanvas = ({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
       onWheel={handleWheel}
+      onClick={handleCanvasClick}
       onDoubleClick={handleDoubleClick}
     >
       {/* Background pattern */}
