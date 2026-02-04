@@ -481,7 +481,7 @@ export const MindmapCanvas = ({
         >
           <MindmapNodeComponent
             node={node}
-            isSelected={selectedNodeId === nodeId || selectedNodeIds.has(nodeId)}
+            isSelected={selectedNodeIds.size > 0 ? selectedNodeIds.has(nodeId) : selectedNodeId === nodeId}
             isRoot={nodeId === mindmap.rootNodeId}
             onSelect={() => {
               onSelectNode(nodeId);
@@ -516,7 +516,7 @@ export const MindmapCanvas = ({
       <FloatingNoteComponent
         key={note.id}
         note={note}
-        isSelected={selectedNodeId === `floating:${note.id}` || selectedNodeIds.has(`floating:${note.id}`)}
+        isSelected={selectedNodeIds.size > 0 ? selectedNodeIds.has(`floating:${note.id}`) : selectedNodeId === `floating:${note.id}`}
         onSelect={() => {
           onSelectNode(`floating:${note.id}`);
           setSelectedNodeIds(new Set());

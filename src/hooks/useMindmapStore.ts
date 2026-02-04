@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Mindmap,
   MindmapNode,
@@ -43,12 +43,14 @@ export const useMindmapStore = () => {
     ? store.mindmaps[store.activeMindmapId]
     : null;
 
-  // Set selected node to root when mindmap changes
+  // Set selected node to root when mindmap changes (but not when explicitly cleared for multi-select)
+  const hasInitializedRef = useRef(false);
   useEffect(() => {
-    if (activeMindmap && !selectedNodeId) {
+    if (activeMindmap && !hasInitializedRef.current) {
       setSelectedNodeId(activeMindmap.rootNodeId);
+      hasInitializedRef.current = true;
     }
-  }, [activeMindmap, selectedNodeId]);
+  }, [activeMindmap]);
 
   const setActiveMindmap = useCallback((mindmapId: string) => {
     setStore((prev) => ({ ...prev, activeMindmapId: mindmapId }));
