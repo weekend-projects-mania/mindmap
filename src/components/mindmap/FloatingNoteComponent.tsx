@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { FloatingNote } from "@/types/mindmap";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Trash2, GripVertical } from "lucide-react";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FloatingNoteComponentProps {
@@ -10,7 +8,7 @@ interface FloatingNoteComponentProps {
   isSelected: boolean;
   onSelect: () => void;
   onDelete: () => void;
-  onUpdateTitle: (title: string) => void;
+  onUpdateContent: (content: string) => void;
   onUpdatePosition: (position: { x: number; y: number }) => void;
   scale: number;
 }
@@ -20,36 +18,46 @@ export const FloatingNoteComponent = ({
   isSelected,
   onSelect,
   onDelete,
-  onUpdateTitle,
+  onUpdateContent,
   onUpdatePosition,
   scale,
 }: FloatingNoteComponentProps) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState(note.title);
-  const [isHovered, setIsHovered] = useState(false);
+  const [isEditing, setIsEditing] = useState(!note.content);
+  const [editContent, setEditContent] = useState(note.content);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const nodeRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleDoubleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsEditing(true);
-    setEditTitle(note.title);
-  };
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.focus();
+      textareaRef.current.select();
+    }
+  }, [isEditing]);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [editContent]);
 
   const handleBlur = () => {
     setIsEditing(false);
-    if (editTitle.trim() && editTitle !== note.title) {
-      onUpdateTitle(editTitle.trim());
+    if (editContent.trim() !== note.content) {
+      onUpdateContent(editContent.trim());
+    }
+    // Delete if empty
+    if (!editContent.trim()) {
+      onDelete();
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleBlur();
-    } else if (e.key === "Escape") {
+    if (e.key === "Escape") {
       setIsEditing(false);
-      setEditTitle(note.title);
+      setEditContent(note.content);
     }
   };
 
@@ -88,12 +96,8 @@ export const FloatingNoteComponent = ({
 
   return (
     <div
-      ref={nodeRef}
       className={cn(
-        "absolute group flex items-center gap-1 px-3 py-2 rounded-lg border-2 bg-accent/50 shadow-sm transition-colors duration-200 min-w-[120px] max-w-[200px]",
-        isSelected
-          ? "border-primary ring-2 ring-primary/20 shadow-md"
-          : "border-dashed border-muted-foreground/30 hover:border-muted-foreground/50",
+        "absolute group",
         isDragging ? "cursor-grabbing" : "cursor-grab"
       )}
       style={{
@@ -104,48 +108,47 @@ export const FloatingNoteComponent = ({
         e.stopPropagation();
         onSelect();
       }}
-      onDoubleClick={handleDoubleClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onDoubleClick={(e) => {
+        e.stopPropagation();
+        setIsEditing(true);
+        setEditContent(note.content);
+      }}
       onMouseDown={handleMouseDown}
     >
-      {/* Drag handle */}
-      <div className="absolute -left-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-50">
-        <GripVertical className="h-3 w-3 text-muted-foreground" />
-      </div>
+      {/* Delete button */}
+      <button
+        className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-destructive text-destructive-foreground rounded-full p-0.5 hover:bg-destructive/90"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <X className="h-3 w-3" />
+      </button>
 
-      {/* Title */}
       {isEditing ? (
-        <Input
-          value={editTitle}
-          onChange={(e) => setEditTitle(e.target.value)}
+        <textarea
+          ref={textareaRef}
+          value={editContent}
+          onChange={(e) => setEditContent(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          className="h-6 px-1 py-0 text-sm"
-          autoFocus
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
+          placeholder="Add a comment..."
+          className="bg-transparent border-none outline-none resize-none text-sm text-foreground/80 italic min-w-[100px] max-w-[250px] p-1 rounded focus:ring-1 focus:ring-primary/30"
+          rows={1}
         />
       ) : (
-        <span className="text-sm font-medium truncate flex-1">{note.title}</span>
-      )}
-
-      {/* Delete button */}
-      {isHovered && !isEditing && (
-        <div className="flex items-center gap-0.5 ml-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-5 w-5 p-0 text-destructive hover:text-destructive"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
-        </div>
+        <p
+          className={cn(
+            "text-sm italic text-foreground/70 max-w-[250px] whitespace-pre-wrap p-1 rounded transition-colors",
+            isSelected && "bg-primary/10 ring-1 ring-primary/30"
+          )}
+        >
+          {note.content || "Add a comment..."}
+        </p>
       )}
     </div>
   );

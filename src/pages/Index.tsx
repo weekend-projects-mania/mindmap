@@ -44,24 +44,15 @@ const Index = () => {
   const selectedContent = selectedNode || selectedFloatingNote;
   const isFloatingNote = selectedNodeId?.startsWith("floating:");
 
+  // Only use regular nodes for the editor (not floating notes)
   const handleEditorContentChange = (content: string) => {
-    if (!selectedNodeId) return;
-    if (isFloatingNote) {
-      const noteId = selectedNodeId.replace("floating:", "");
-      updateFloatingNote(noteId, { content });
-    } else {
-      updateNode(selectedNodeId, { content });
-    }
+    if (!selectedNodeId || isFloatingNote) return;
+    updateNode(selectedNodeId, { content });
   };
 
   const handleEditorTitleChange = (title: string) => {
-    if (!selectedNodeId) return;
-    if (isFloatingNote) {
-      const noteId = selectedNodeId.replace("floating:", "");
-      updateFloatingNote(noteId, { title });
-    } else {
-      updateNode(selectedNodeId, { title });
-    }
+    if (!selectedNodeId || isFloatingNote) return;
+    updateNode(selectedNodeId, { title });
   };
 
   const renderCanvas = () => (
@@ -81,12 +72,12 @@ const Index = () => {
   );
 
   const renderEditor = () => (
-    selectedContent ? (
+    selectedNode ? (
       <RichEditor
         key={selectedNodeId}
-        content={selectedContent.content}
+        content={selectedNode.content}
         onChange={handleEditorContentChange}
-        nodeTitle={selectedContent.title}
+        nodeTitle={selectedNode.title}
         onTitleChange={handleEditorTitleChange}
       />
     ) : (
