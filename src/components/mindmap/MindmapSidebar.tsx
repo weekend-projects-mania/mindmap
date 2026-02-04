@@ -4,6 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -23,6 +28,8 @@ import {
   Brain,
   Plus,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Trash2,
   Edit2,
   Check,
@@ -37,6 +44,8 @@ interface MindmapSidebarProps {
   onCreateMindmap: (name: string) => void;
   onDeleteMindmap: (id: string) => void;
   onRenameMindmap: (id: string, name: string) => void;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
 export const MindmapSidebar = ({
@@ -46,6 +55,8 @@ export const MindmapSidebar = ({
   onCreateMindmap,
   onDeleteMindmap,
   onRenameMindmap,
+  isCollapsed,
+  onToggleCollapse,
 }: MindmapSidebarProps) => {
   const [newMindmapName, setNewMindmapName] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -87,45 +98,69 @@ export const MindmapSidebar = ({
   const activeMindmap = mindmaps.find((m) => m.id === activeMindmapId);
 
   return (
-    <div className="w-64 border-r bg-sidebar flex flex-col h-full">
+    <div
+      className={cn(
+        "border-r bg-sidebar flex flex-col h-full transition-all duration-300",
+        isCollapsed ? "w-14" : "w-64"
+      )}
+    >
       {/* Header */}
-      <div className="p-4 border-b flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Brain className="h-5 w-5 text-primary" />
-          <span className="font-semibold">Mindmaps</span>
+      <div className={cn("p-4 border-b flex items-center", isCollapsed ? "justify-center" : "justify-between")}>
+        {!isCollapsed && (
+          <div className="flex items-center gap-2">
+            <Brain className="h-5 w-5 text-primary" />
+            <span className="font-semibold">Mindmaps</span>
+          </div>
+        )}
+        <div className={cn("flex items-center", isCollapsed ? "flex-col gap-2" : "gap-1")}>
+          {isCollapsed && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Brain className="h-5 w-5 text-primary" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Mindmaps</TooltipContent>
+            </Tooltip>
+          )}
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="right">New Mindmap</TooltipContent>
+            </Tooltip>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Mindmap</DialogTitle>
+                <DialogDescription>
+                  Enter a name for your new mindmap.
+                </DialogDescription>
+              </DialogHeader>
+              <Input
+                value={newMindmapName}
+                onChange={(e) => setNewMindmapName(e.target.value)}
+                placeholder="Mindmap name..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleCreate();
+                }}
+                autoFocus
+              />
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleCreate} disabled={!newMindmapName.trim()}>
+                  Create
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Plus className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Mindmap</DialogTitle>
-              <DialogDescription>
-                Enter a name for your new mindmap.
-              </DialogDescription>
-            </DialogHeader>
-            <Input
-              value={newMindmapName}
-              onChange={(e) => setNewMindmapName(e.target.value)}
-              placeholder="Mindmap name..."
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleCreate();
-              }}
-              autoFocus
-            />
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreate} disabled={!newMindmapName.trim()}>
-                Create
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
 
       {/* Active mindmap selector (mobile/compact) */}
@@ -159,20 +194,22 @@ export const MindmapSidebar = ({
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-1">
           {mindmaps.map((mindmap) => (
-            <div
-              key={mindmap.id}
-              className={cn(
-                "group flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors",
-                mindmap.id === activeMindmapId
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "hover:bg-sidebar-accent/50"
-              )}
-              onClick={() => {
-                if (editingId !== mindmap.id) {
-                  onSelectMindmap(mindmap.id);
-                }
-              }}
-            >
+            <Tooltip key={mindmap.id}>
+              <TooltipTrigger asChild>
+                <div
+                  className={cn(
+                    "group flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors",
+                    mindmap.id === activeMindmapId
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "hover:bg-sidebar-accent/50",
+                    isCollapsed && "justify-center px-2"
+                  )}
+                  onClick={() => {
+                    if (editingId !== mindmap.id) {
+                      onSelectMindmap(mindmap.id);
+                    }
+                  }}
+                >
               {editingId === mindmap.id ? (
                 <div className="flex-1 flex items-center gap-1">
                   <Input
@@ -212,8 +249,10 @@ export const MindmapSidebar = ({
               ) : (
                 <>
                   <Brain className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="flex-1 truncate text-sm">{mindmap.name}</span>
-                  <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5">
+                  {!isCollapsed && (
+                    <>
+                      <span className="flex-1 truncate text-sm">{mindmap.name}</span>
+                      <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -266,21 +305,48 @@ export const MindmapSidebar = ({
                           </DialogFooter>
                         </DialogContent>
                       </Dialog>
-                    )}
-                  </div>
+                      )}
+                      </div>
+                    </>
+                  )}
                 </>
               )}
-            </div>
+                </div>
+              </TooltipTrigger>
+              {isCollapsed && (
+                <TooltipContent side="right">{mindmap.name}</TooltipContent>
+              )}
+            </Tooltip>
           ))}
         </div>
       </ScrollArea>
 
-      {/* Footer with stats */}
-      <div className="p-4 border-t text-xs text-muted-foreground">
-        {mindmaps.length} mindmap{mindmaps.length !== 1 ? "s" : ""} •{" "}
-        {activeMindmap
-          ? `${Object.keys(activeMindmap.nodes).length} nodes`
-          : "No mindmap selected"}
+      {/* Footer with collapse toggle */}
+      <div className="p-2 border-t flex items-center justify-between">
+        {!isCollapsed && (
+          <span className="text-xs text-muted-foreground px-2">
+            {mindmaps.length} mindmap{mindmaps.length !== 1 ? "s" : ""}
+          </span>
+        )}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn("h-8 w-8", isCollapsed && "mx-auto")}
+              onClick={onToggleCollapse}
+            >
+              {isCollapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            {isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          </TooltipContent>
+        </Tooltip>
       </div>
     </div>
   );

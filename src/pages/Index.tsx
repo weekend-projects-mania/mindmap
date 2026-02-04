@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useMindmapStore } from "@/hooks/useMindmapStore";
 import { MindmapSidebar } from "@/components/mindmap/MindmapSidebar";
 import { MindmapCanvas } from "@/components/mindmap/MindmapCanvas";
@@ -7,9 +8,11 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from "@/components/ui/resizable";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { Brain } from "lucide-react";
 
 const Index = () => {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const {
     mindmaps,
     activeMindmap,
@@ -29,16 +32,19 @@ const Index = () => {
   } = useMindmapStore();
 
   return (
-    <div className="h-screen flex overflow-hidden bg-background">
-      {/* Sidebar */}
-      <MindmapSidebar
-        mindmaps={mindmaps}
-        activeMindmapId={activeMindmapId}
-        onSelectMindmap={setActiveMindmap}
-        onCreateMindmap={createMindmap}
-        onDeleteMindmap={deleteMindmap}
-        onRenameMindmap={renameMindmap}
-      />
+    <TooltipProvider>
+      <div className="h-screen flex overflow-hidden bg-background">
+        {/* Sidebar */}
+        <MindmapSidebar
+          mindmaps={mindmaps}
+          activeMindmapId={activeMindmapId}
+          onSelectMindmap={setActiveMindmap}
+          onCreateMindmap={createMindmap}
+          onDeleteMindmap={deleteMindmap}
+          onRenameMindmap={renameMindmap}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        />
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -94,8 +100,9 @@ const Index = () => {
             </div>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 };
 
