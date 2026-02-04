@@ -156,6 +156,54 @@ export const useMindmapStore = () => {
     [store.activeMindmapId]
   );
 
+  const addSiblingNode = useCallback(
+    (nodeId: string) => {
+      if (!store.activeMindmapId) return null;
+
+      const mindmap = store.mindmaps[store.activeMindmapId];
+      if (!mindmap) return null;
+
+      const node = mindmap.nodes[nodeId];
+      if (!node || !node.parentId) return null; // Can't add sibling to root
+
+      const parentId = node.parentId;
+      const newNode = createNewNode(parentId);
+
+      setStore((prev) => {
+        const currentMindmap = prev.mindmaps[prev.activeMindmapId!];
+        if (!currentMindmap) return prev;
+
+        const parentNode = currentMindmap.nodes[parentId];
+        const siblingIndex = parentNode.children.indexOf(nodeId);
+        const newChildren = [...parentNode.children];
+        newChildren.splice(siblingIndex + 1, 0, newNode.id);
+
+        return {
+          ...prev,
+          mindmaps: {
+            ...prev.mindmaps,
+            [currentMindmap.id]: {
+              ...currentMindmap,
+              updatedAt: Date.now(),
+              nodes: {
+                ...currentMindmap.nodes,
+                [newNode.id]: newNode,
+                [parentId]: {
+                  ...parentNode,
+                  children: newChildren,
+                },
+              },
+            },
+          },
+        };
+      });
+
+      setSelectedNodeId(newNode.id);
+      return newNode;
+    },
+    [store.activeMindmapId, store.mindmaps]
+  );
+
   const deleteNode = useCallback(
     (nodeId: string) => {
       if (!store.activeMindmapId) return;
@@ -405,6 +453,7 @@ export const useMindmapStore = () => {
     renameMindmap,
     updateNode,
     addChildNode,
+    addSiblingNode,
     deleteNode,
     moveNode,
     toggleCollapse,

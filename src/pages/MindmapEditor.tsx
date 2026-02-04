@@ -45,6 +45,7 @@ const MindmapEditor = () => {
     setSelectedNodeId,
     updateNode,
     addChildNode,
+    addSiblingNode,
     deleteNode,
     moveNode,
     toggleCollapse,
@@ -90,6 +91,7 @@ const MindmapEditor = () => {
       selectedNodeId={selectedNodeId}
       onSelectNode={setSelectedNodeId}
       onAddChild={addChildNode}
+      onAddSibling={addSiblingNode}
       onDeleteNode={deleteNode}
       onUpdateNode={updateNode}
       onToggleCollapse={toggleCollapse}
