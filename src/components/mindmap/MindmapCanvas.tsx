@@ -2,6 +2,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { Mindmap, MindmapNode, FloatingNote } from "@/types/mindmap";
 import { MindmapNodeComponent } from "./MindmapNode";
 import { FloatingNoteComponent } from "./FloatingNoteComponent";
+import { EdgeLabel } from "./EdgeLabel";
 import { cn } from "@/lib/utils";
 import { Maximize2 } from "lucide-react";
 
@@ -199,9 +200,9 @@ export const MindmapCanvas = ({
     setDraggedNodeId(null);
   };
 
-  // Draw connection lines
+  // Draw connection lines with labels
   const renderConnections = () => {
-    const lines: JSX.Element[] = [];
+    const elements: JSX.Element[] = [];
 
     const drawLines = (nodeId: string) => {
       const node = mindmap.nodes[nodeId];
@@ -209,17 +210,19 @@ export const MindmapCanvas = ({
       if (!node || !nodeLayout || node.collapsed) return;
 
       node.children.forEach((childId) => {
+        const childNode = mindmap.nodes[childId];
         const childLayout = layout.get(childId);
-        if (childLayout) {
+        if (childLayout && childNode) {
           const startX = nodeLayout.x + nodeLayout.width / 2;
           const startY = nodeLayout.y + nodeLayout.height;
           const endX = childLayout.x + childLayout.width / 2;
           const endY = childLayout.y;
           const midY = (startY + endY) / 2;
 
-          lines.push(
+          // Connection line
+          elements.push(
             <path
-              key={`${nodeId}-${childId}`}
+              key={`line-${nodeId}-${childId}`}
               d={`M ${startX} ${startY} C ${startX} ${midY}, ${endX} ${midY}, ${endX} ${endY}`}
               fill="none"
               stroke="hsl(var(--border))"
@@ -227,13 +230,29 @@ export const MindmapCanvas = ({
               className="transition-all duration-200"
             />
           );
+
+          // Edge label (positioned at midpoint of the edge)
+          const labelX = (startX + endX) / 2;
+          const labelY = midY;
+
+          elements.push(
+            <EdgeLabel
+              key={`label-${childId}`}
+              nodeId={childId}
+              label={childNode.edgeLabel || ""}
+              x={labelX}
+              y={labelY}
+              onUpdateLabel={(label) => onUpdateNode(childId, { edgeLabel: label })}
+            />
+          );
+
           drawLines(childId);
         }
       });
     };
 
     drawLines(mindmap.rootNodeId);
-    return lines;
+    return elements;
   };
 
   // Render nodes
@@ -375,17 +394,20 @@ export const MindmapCanvas = ({
           transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
         }}
       >
-        {/* Connection lines SVG */}
+        {/* Connection lines and labels SVG */}
         <svg
-          className="absolute pointer-events-none"
+          className="absolute"
           style={{
             left: -2000,
             top: -2000,
             width: 4000,
             height: 4000,
+            pointerEvents: "none",
           }}
         >
-          <g transform="translate(2000, 2000)">{renderConnections()}</g>
+          <g transform="translate(2000, 2000)" style={{ pointerEvents: "auto" }}>
+            {renderConnections()}
+          </g>
         </svg>
 
         {/* Nodes */}
