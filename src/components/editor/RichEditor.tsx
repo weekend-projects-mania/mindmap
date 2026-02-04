@@ -219,7 +219,7 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: Rich
       handleKeyDown: (view, event) => {
         if (event.key === "Tab" && editor?.isActive("codeBlock")) {
           event.preventDefault();
-          editor?.commands.insertContent("\t");
+          editor?.commands.insertContent("  ");
           return true;
         }
         return false;
