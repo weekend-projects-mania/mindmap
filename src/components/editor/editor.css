@@ -52,51 +52,7 @@
   font-style: italic;
 }
 
-/* Table wrapper */
-.table-wrapper {
-  position: relative;
-  margin: 1rem 0;
-  width: 100%;
-  display: block;
-}
-
-.table-wrapper .table-container {
-  width: 100%;
-  display: block;
-}
-
-.table-wrapper table {
-  width: 100% !important;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-
-.table-wrapper table td,
-.table-wrapper table th {
-  border: 1px solid hsl(var(--border));
-  padding: 0.5rem 0.75rem;
-  vertical-align: top;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.table-wrapper table th {
-  background-color: hsl(var(--muted));
-  font-weight: 600;
-}
-
-.table-wrapper table td {
-  background-color: hsl(var(--background));
-}
-
-.table-wrapper table td > *,
-.table-wrapper table th > * {
-  margin: 0;
-}
-
-/* ProseMirror table fallback styles */
+/* Table styles */
 .ProseMirror table {
   width: 100%;
   border-collapse: collapse;
