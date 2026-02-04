@@ -6,7 +6,6 @@ import {
   ChevronDown,
   ChevronRight,
   Plus,
-  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -149,19 +148,6 @@ export const MindmapNodeComponent = ({
           >
             <Plus className="h-3 w-3" />
           </Button>
-          {!isRoot && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-5 w-5 p-0 text-destructive hover:text-destructive"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
-          )}
         </div>
       )}
     </div>

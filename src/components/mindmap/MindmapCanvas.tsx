@@ -131,7 +131,7 @@ export const MindmapCanvas = ({
     }
   }, [mindmap.id]);
 
-  // Keyboard shortcuts for adding nodes
+  // Keyboard shortcuts for adding/deleting nodes
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if user is typing in an input or textarea
@@ -151,12 +151,18 @@ export const MindmapCanvas = ({
       } else if (e.key === "Tab") {
         e.preventDefault();
         onAddChild(selectedNodeId);
+      } else if (e.key === "Backspace" || e.key === "Delete") {
+        e.preventDefault();
+        // Don't delete the root node
+        if (selectedNodeId !== mindmap.rootNodeId) {
+          onDeleteNode(selectedNodeId);
+        }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedNodeId, onAddChild, onAddSibling]);
+  }, [selectedNodeId, onAddChild, onAddSibling, onDeleteNode, mindmap.rootNodeId]);
 
   // Pan handlers - RIGHT CLICK for panning
   const handleMouseDown = (e: React.MouseEvent) => {
