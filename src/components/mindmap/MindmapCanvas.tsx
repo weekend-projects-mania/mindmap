@@ -335,7 +335,11 @@ export const MindmapCanvas = ({
       </div>
 
       {/* Zoom indicator */}
-      <div className="absolute bottom-4 right-4 bg-card border rounded-md px-2 py-1 text-xs text-muted-foreground shadow-sm">
+      <div
+        className="absolute bottom-4 right-4 bg-card border rounded-md px-2 py-1 text-xs text-muted-foreground shadow-sm cursor-pointer hover:bg-accent transition-colors"
+        onClick={() => setTransform((prev) => ({ ...prev, scale: 1 }))}
+        title="Click to reset zoom"
+      >
         {Math.round(transform.scale * 100)}%
       </div>
     </div>
