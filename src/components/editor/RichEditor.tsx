@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Bold,
   Italic,
   Strikethrough,
@@ -16,11 +22,12 @@ import {
   List,
   ListOrdered,
   Quote,
-  Minus,
   Link as LinkIcon,
-  Undo,
-  Redo,
   Code2,
+  Plus,
+  Type,
+  ChevronDown,
+  ListTree,
 } from "lucide-react";
 import { useEffect, useCallback, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -53,7 +60,7 @@ const ToolbarButton = ({ onClick, isActive, disabled, children, title }: Toolbar
   </Button>
 );
 
-const EditorToolbar = ({ editor }: { editor: Editor }) => {
+const FloatingToolbar = ({ editor }: { editor: Editor }) => {
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
 
@@ -76,7 +83,139 @@ const EditorToolbar = ({ editor }: { editor: Editor }) => {
   };
 
   return (
-    <div className="border-b bg-muted/30 p-1 flex flex-wrap items-center gap-0.5">
+    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-background border rounded-lg shadow-lg p-1.5 flex items-center gap-0.5">
+      {/* Insert dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-8 px-2 gap-1">
+            <Plus className="h-4 w-4" />
+            <ChevronDown className="h-3 w-3" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem onClick={() => editor.chain().focus().setHorizontalRule().run()}>
+            Horizontal Rule
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => editor.chain().focus().toggleCodeBlock().run()}>
+            <Code2 className="h-4 w-4 mr-2" />
+            Code Block
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => editor.chain().focus().toggleBlockquote().run()}>
+            <Quote className="h-4 w-4 mr-2" />
+            Quote
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Separator orientation="vertical" className="h-6 mx-1" />
+
+      {/* Text style dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-8 px-2 gap-1">
+            <Type className="h-4 w-4" />
+            <ChevronDown className="h-3 w-3" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem 
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            className={editor.isActive("heading", { level: 1 }) ? "bg-accent" : ""}
+          >
+            <Heading1 className="h-4 w-4 mr-2" />
+            Heading 1
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            className={editor.isActive("heading", { level: 2 }) ? "bg-accent" : ""}
+          >
+            <Heading2 className="h-4 w-4 mr-2" />
+            Heading 2
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            className={editor.isActive("heading", { level: 3 }) ? "bg-accent" : ""}
+          >
+            <Heading3 className="h-4 w-4 mr-2" />
+            Heading 3
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Lists */}
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+        isActive={editor.isActive("bulletList")}
+        title="Bullet List"
+      >
+        <List className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        isActive={editor.isActive("orderedList")}
+        title="Ordered List"
+      >
+        <ListOrdered className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleBlockquote().run()}
+        isActive={editor.isActive("blockquote")}
+        title="Toggle list nesting"
+      >
+        <ListTree className="h-4 w-4" />
+      </ToolbarButton>
+
+      <Separator orientation="vertical" className="h-6 mx-1" />
+
+      {/* Code */}
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleCode().run()}
+        isActive={editor.isActive("code")}
+        title="Inline Code"
+      >
+        <Code className="h-4 w-4" />
+      </ToolbarButton>
+
+      {/* Link */}
+      <div className="relative">
+        <ToolbarButton onClick={handleLinkClick} isActive={editor.isActive("link")} title="Link">
+          <LinkIcon className="h-4 w-4" />
+        </ToolbarButton>
+        {showLinkInput && (
+          <div className="absolute bottom-full left-0 mb-2 z-10 bg-popover border rounded-md shadow-md p-2 flex gap-2">
+            <Input
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              placeholder="Enter URL..."
+              className="h-8 w-48 text-sm"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") setLink();
+                if (e.key === "Escape") setShowLinkInput(false);
+              }}
+              autoFocus
+            />
+            <Button size="sm" onClick={setLink}>
+              Add
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Table of contents */}
+      <ToolbarButton
+        onClick={() => {}}
+        title="Table of Contents"
+      >
+        <ListTree className="h-4 w-4" />
+      </ToolbarButton>
+    </div>
+  );
+};
+
+// Bubble menu for text formatting (shows when text is selected)
+const TextFormatButtons = ({ editor }: { editor: Editor }) => {
+  return (
+    <div className="flex items-center gap-0.5">
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleBold().run()}
         isActive={editor.isActive("bold")}
@@ -97,107 +236,6 @@ const EditorToolbar = ({ editor }: { editor: Editor }) => {
         title="Strikethrough"
       >
         <Strikethrough className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleCode().run()}
-        isActive={editor.isActive("code")}
-        title="Inline Code"
-      >
-        <Code className="h-4 w-4" />
-      </ToolbarButton>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        isActive={editor.isActive("heading", { level: 1 })}
-        title="Heading 1"
-      >
-        <Heading1 className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        isActive={editor.isActive("heading", { level: 2 })}
-        title="Heading 2"
-      >
-        <Heading2 className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        isActive={editor.isActive("heading", { level: 3 })}
-        title="Heading 3"
-      >
-        <Heading3 className="h-4 w-4" />
-      </ToolbarButton>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-        isActive={editor.isActive("bulletList")}
-        title="Bullet List"
-      >
-        <List className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        isActive={editor.isActive("orderedList")}
-        title="Ordered List"
-      >
-        <ListOrdered className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        isActive={editor.isActive("blockquote")}
-        title="Blockquote"
-      >
-        <Quote className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-        isActive={editor.isActive("codeBlock")}
-        title="Code Block"
-      >
-        <Code2 className="h-4 w-4" />
-      </ToolbarButton>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-
-      <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Horizontal Rule">
-        <Minus className="h-4 w-4" />
-      </ToolbarButton>
-
-      <div className="relative">
-        <ToolbarButton onClick={handleLinkClick} isActive={editor.isActive("link")} title="Link">
-          <LinkIcon className="h-4 w-4" />
-        </ToolbarButton>
-        {showLinkInput && (
-          <div className="absolute top-full left-0 mt-1 z-10 bg-popover border rounded-md shadow-md p-2 flex gap-2">
-            <Input
-              value={linkUrl}
-              onChange={(e) => setLinkUrl(e.target.value)}
-              placeholder="Enter URL..."
-              className="h-8 w-48 text-sm"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") setLink();
-                if (e.key === "Escape") setShowLinkInput(false);
-              }}
-              autoFocus
-            />
-            <Button size="sm" onClick={setLink}>
-              Add
-            </Button>
-          </div>
-        )}
-      </div>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-
-      <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
-        <Undo className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo">
-        <Redo className="h-4 w-4" />
       </ToolbarButton>
     </div>
   );
@@ -226,7 +264,7 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: Rich
     },
     editorProps: {
       attributes: {
-        class: "prose prose-sm max-w-none focus:outline-none min-h-[200px] p-4",
+        class: "prose prose-sm max-w-none focus:outline-none min-h-[200px] p-6 pt-0",
       },
     },
   });
@@ -254,10 +292,11 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: Rich
   }
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      {/* Node title */}
-      <div className="border-b p-4 flex justify-center">
-        <div className="w-full max-w-xl">
+    <div className="relative flex flex-col h-full bg-background">
+      {/* Editor content area with title */}
+      <div className="flex-1 overflow-auto flex justify-center pb-20">
+        <div className="w-full max-w-2xl px-6 pt-8">
+          {/* Large node title */}
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -268,21 +307,22 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: Rich
                 (e.target as HTMLInputElement).blur();
               }
             }}
-            className="text-xl font-semibold border-none shadow-none focus-visible:ring-0 px-0 h-auto"
+            className="text-3xl font-bold border-none shadow-none focus-visible:ring-0 px-0 h-auto mb-4"
             placeholder="Node title..."
           />
-        </div>
-      </div>
 
-      {/* Toolbar */}
-      <EditorToolbar editor={editor} />
+          {/* Inline text formatting buttons */}
+          <div className="mb-4 border-b pb-3">
+            <TextFormatButtons editor={editor} />
+          </div>
 
-      {/* Editor content */}
-      <div className="flex-1 overflow-auto flex justify-center">
-        <div className="w-full max-w-xl">
+          {/* Editor content */}
           <EditorContent editor={editor} className="h-full" />
         </div>
       </div>
+
+      {/* Floating toolbar at bottom */}
+      <FloatingToolbar editor={editor} />
     </div>
   );
 };
