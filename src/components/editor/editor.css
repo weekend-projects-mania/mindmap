@@ -57,15 +57,16 @@
   position: relative;
   margin: 1rem 0;
   width: 100%;
+  display: block;
 }
 
 .table-wrapper .table-container {
   width: 100%;
-  overflow: hidden;
+  display: block;
 }
 
 .table-wrapper table {
-  width: 100%;
+  width: 100% !important;
   border-collapse: collapse;
   table-layout: fixed;
 }
@@ -77,6 +78,8 @@
   vertical-align: top;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .table-wrapper table th {
