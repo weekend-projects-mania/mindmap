@@ -175,38 +175,39 @@ const MindmapsList = () => {
                           Rename
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <Dialog
-                          open={deleteConfirmId === mindmap.id}
-                          onOpenChange={(open) => setDeleteConfirmId(open ? mindmap.id : null)}
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            setDeleteConfirmId(mindmap.id);
+                          }}
                         >
-                          <DialogTrigger asChild>
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onSelect={(e) => e.preventDefault()}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DialogTrigger>
-                          <DialogContent onClick={(e) => e.stopPropagation()}>
-                            <DialogHeader>
-                              <DialogTitle>Delete Mindmap</DialogTitle>
-                              <DialogDescription>
-                                Are you sure you want to delete "{mindmap.name}"? This action cannot be undone.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <DialogFooter>
-                              <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>
-                                Cancel
-                              </Button>
-                              <Button variant="destructive" onClick={() => confirmDelete(mindmap.id)}>
-                                Delete
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
+                    <Dialog
+                      open={deleteConfirmId === mindmap.id}
+                      onOpenChange={(open) => setDeleteConfirmId(open ? mindmap.id : null)}
+                    >
+                      <DialogContent onClick={(e) => e.stopPropagation()}>
+                        <DialogHeader>
+                          <DialogTitle>Delete Mindmap</DialogTitle>
+                          <DialogDescription>
+                            Are you sure you want to delete "{mindmap.name}"? This action cannot be undone.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>
+                            Cancel
+                          </Button>
+                          <Button variant="destructive" onClick={() => confirmDelete(mindmap.id)}>
+                            Delete
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                   <CardDescription className="text-xs">
                     {Object.keys(mindmap.nodes).length} nodes
