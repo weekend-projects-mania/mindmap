@@ -180,13 +180,6 @@ const FloatingToolbar = ({ editor }: { editor: Editor }) => {
       >
         <ListOrdered className="h-4 w-4" />
       </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        isActive={editor.isActive("blockquote")}
-        title="Toggle list nesting"
-      >
-        <ListTree className="h-4 w-4" />
-      </ToolbarButton>
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
