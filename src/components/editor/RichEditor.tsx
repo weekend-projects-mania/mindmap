@@ -11,6 +11,7 @@ import { TableHeader } from "@tiptap/extension-table-header";
 import { common, createLowlight } from "lowlight";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { CodeBlockComponent } from "./CodeBlockComponent";
+import { TableComponent } from "./TableComponent";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -212,7 +213,11 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: Rich
       }).configure({
         lowlight: createLowlight(common),
       }),
-      Table.configure({
+      Table.extend({
+        addNodeView() {
+          return ReactNodeViewRenderer(TableComponent);
+        },
+      }).configure({
         resizable: false,
       }),
       TableRow,
