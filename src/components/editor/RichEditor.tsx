@@ -4,6 +4,10 @@ import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import { Table } from "@tiptap/extension-table";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TableCell } from "@tiptap/extension-table-cell";
+import { TableHeader } from "@tiptap/extension-table-header";
 import { common, createLowlight } from "lowlight";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { CodeBlockComponent } from "./CodeBlockComponent";
@@ -33,7 +37,7 @@ import {
   Plus,
   Type,
   ChevronDown,
-  ListTree,
+  Table2,
 } from "lucide-react";
 import { useEffect, useCallback, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -85,6 +89,10 @@ const FloatingToolbar = ({ editor }: { editor: Editor }) => {
           <DropdownMenuItem onClick={() => editor.chain().focus().toggleBlockquote().run()}>
             <Quote className="h-4 w-4 mr-2" />
             Quote
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => editor.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: false }).run()}>
+            <Table2 className="h-4 w-4 mr-2" />
+            Table
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -204,6 +212,12 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: Rich
       }).configure({
         lowlight: createLowlight(common),
       }),
+      Table.configure({
+        resizable: false,
+      }),
+      TableRow,
+      TableCell,
+      TableHeader,
       Link.configure({
         openOnClick: true,
         HTMLAttributes: {

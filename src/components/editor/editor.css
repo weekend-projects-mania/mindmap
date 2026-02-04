@@ -52,6 +52,36 @@
   font-style: italic;
 }
 
+/* Table styles */
+.ProseMirror table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  table-layout: fixed;
+}
+
+.ProseMirror table td,
+.ProseMirror table th {
+  border: 1px solid hsl(var(--border));
+  padding: 0.5rem 0.75rem;
+  vertical-align: top;
+  min-width: 100px;
+}
+
+.ProseMirror table th {
+  background-color: hsl(var(--muted));
+  font-weight: 600;
+}
+
+.ProseMirror table td {
+  background-color: hsl(var(--background));
+}
+
+.ProseMirror table td > *,
+.ProseMirror table th > * {
+  margin: 0;
+}
+
 /* Code block wrapper with header */
 .code-block-wrapper {
   background-color: hsl(var(--muted));
