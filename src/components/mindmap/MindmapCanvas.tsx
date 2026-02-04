@@ -29,10 +29,19 @@ interface LayoutNode {
   height: number;
 }
 
+interface SelectionBox {
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+}
+
 const NODE_WIDTH = 160;
 const NODE_HEIGHT = 44;
 const HORIZONTAL_GAP = 40;
 const VERTICAL_GAP = 60;
+const FLOATING_NOTE_WIDTH = 150;
+const FLOATING_NOTE_HEIGHT = 30;
 
 export const MindmapCanvas = ({
   mindmap,
@@ -53,6 +62,11 @@ export const MindmapCanvas = ({
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
+  
+  // Selection box state
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectionBox, setSelectionBox] = useState<SelectionBox | null>(null);
+  const [selectedNodeIds, setSelectedNodeIds] = useState<Set<string>>(new Set());
 
   // Calculate tree layout
   const calculateLayout = useCallback((): Map<string, LayoutNode> => {
@@ -144,12 +158,42 @@ export const MindmapCanvas = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedNodeId, onAddChild, onAddSibling]);
 
-  // Pan handlers
+  // Pan handlers - RIGHT CLICK for panning
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.target === containerRef.current || (e.target as HTMLElement).classList.contains('canvas-background')) {
+    const isCanvasBackground = e.target === containerRef.current || (e.target as HTMLElement).classList.contains('canvas-background');
+    
+    if (!isCanvasBackground) return;
+
+    // Right-click for panning
+    if (e.button === 2) {
+      e.preventDefault();
       setIsPanning(true);
       setPanStart({ x: e.clientX - transform.x, y: e.clientY - transform.y });
     }
+    // Left-click for selection box
+    else if (e.button === 0) {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (rect) {
+        const canvasX = (e.clientX - rect.left - transform.x) / transform.scale;
+        const canvasY = (e.clientY - rect.top - transform.y) / transform.scale;
+        setIsSelecting(true);
+        setSelectionBox({
+          startX: canvasX,
+          startY: canvasY,
+          endX: canvasX,
+          endY: canvasY,
+        });
+        // Clear existing selection unless shift is held
+        if (!e.shiftKey) {
+          setSelectedNodeIds(new Set());
+        }
+      }
+    }
+  };
+
+  // Prevent context menu on right-click
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
   };
 
   // Click on empty space to deselect
@@ -159,6 +203,8 @@ export const MindmapCanvas = ({
       if (selectedNodeId?.startsWith("floating:")) {
         onSelectNode(mindmap.rootNodeId);
       }
+      // Clear multi-selection on click
+      setSelectedNodeIds(new Set());
     }
   };
 
@@ -169,11 +215,70 @@ export const MindmapCanvas = ({
         x: e.clientX - panStart.x,
         y: e.clientY - panStart.y,
       }));
+    } else if (isSelecting && selectionBox) {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (rect) {
+        const canvasX = (e.clientX - rect.left - transform.x) / transform.scale;
+        const canvasY = (e.clientY - rect.top - transform.y) / transform.scale;
+        setSelectionBox((prev) => prev ? { ...prev, endX: canvasX, endY: canvasY } : null);
+      }
     }
   };
 
   const handleMouseUp = () => {
+    if (isSelecting && selectionBox) {
+      // Calculate which nodes are inside the selection box
+      const minX = Math.min(selectionBox.startX, selectionBox.endX);
+      const maxX = Math.max(selectionBox.startX, selectionBox.endX);
+      const minY = Math.min(selectionBox.startY, selectionBox.endY);
+      const maxY = Math.max(selectionBox.startY, selectionBox.endY);
+
+      const newSelectedIds = new Set<string>();
+
+      // Check tree nodes
+      layout.forEach((nodeLayout, nodeId) => {
+        const nodeRight = nodeLayout.x + nodeLayout.width;
+        const nodeBottom = nodeLayout.y + nodeLayout.height;
+        
+        // Check if node intersects with selection box
+        if (
+          nodeLayout.x < maxX &&
+          nodeRight > minX &&
+          nodeLayout.y < maxY &&
+          nodeBottom > minY
+        ) {
+          newSelectedIds.add(nodeId);
+        }
+      });
+
+      // Check floating notes
+      const floatingNotes = mindmap.floatingNotes || {};
+      Object.values(floatingNotes).forEach((note) => {
+        const noteRight = note.position.x + FLOATING_NOTE_WIDTH;
+        const noteBottom = note.position.y + FLOATING_NOTE_HEIGHT;
+        
+        if (
+          note.position.x < maxX &&
+          noteRight > minX &&
+          note.position.y < maxY &&
+          noteBottom > minY
+        ) {
+          newSelectedIds.add(`floating:${note.id}`);
+        }
+      });
+
+      setSelectedNodeIds(newSelectedIds);
+      
+      // If only one item selected, also set it as the main selection
+      if (newSelectedIds.size === 1) {
+        const singleId = Array.from(newSelectedIds)[0];
+        onSelectNode(singleId);
+      }
+    }
+    
     setIsPanning(false);
+    setIsSelecting(false);
+    setSelectionBox(null);
   };
 
   // Double-click to create floating note
@@ -305,7 +410,7 @@ export const MindmapCanvas = ({
         >
           <MindmapNodeComponent
             node={node}
-            isSelected={selectedNodeId === nodeId}
+            isSelected={selectedNodeId === nodeId || selectedNodeIds.has(nodeId)}
             isRoot={nodeId === mindmap.rootNodeId}
             onSelect={() => onSelectNode(nodeId)}
             onAddChild={() => onAddChild(nodeId)}
@@ -336,7 +441,7 @@ export const MindmapCanvas = ({
       <FloatingNoteComponent
         key={note.id}
         note={note}
-        isSelected={selectedNodeId === `floating:${note.id}`}
+        isSelected={selectedNodeId === `floating:${note.id}` || selectedNodeIds.has(`floating:${note.id}`)}
         onSelect={() => onSelectNode(`floating:${note.id}`)}
         onDelete={() => onDeleteFloatingNote(note.id)}
         onUpdateContent={(content) => onUpdateFloatingNote(note.id, { content })}
@@ -395,12 +500,34 @@ export const MindmapCanvas = ({
     });
   }, [layout, mindmap.floatingNotes]);
 
+  // Render selection box
+  const renderSelectionBox = () => {
+    if (!selectionBox || !isSelecting) return null;
+    
+    const minX = Math.min(selectionBox.startX, selectionBox.endX);
+    const minY = Math.min(selectionBox.startY, selectionBox.endY);
+    const width = Math.abs(selectionBox.endX - selectionBox.startX);
+    const height = Math.abs(selectionBox.endY - selectionBox.startY);
+    
+    return (
+      <div
+        className="absolute border-2 border-primary/50 bg-primary/10 pointer-events-none"
+        style={{
+          left: minX,
+          top: minY,
+          width,
+          height,
+        }}
+      />
+    );
+  };
+
   return (
     <div
       ref={containerRef}
       className={cn(
         "relative w-full h-full overflow-hidden bg-muted/30",
-        isPanning ? "cursor-grabbing" : "cursor-grab"
+        isPanning ? "cursor-grabbing" : isSelecting ? "cursor-crosshair" : "cursor-default"
       )}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -409,6 +536,7 @@ export const MindmapCanvas = ({
       onWheel={handleWheel}
       onClick={handleCanvasClick}
       onDoubleClick={handleDoubleClick}
+      onContextMenu={handleContextMenu}
     >
       {/* Background pattern */}
       <div className="canvas-background absolute inset-0" style={{
@@ -444,6 +572,9 @@ export const MindmapCanvas = ({
 
         {/* Floating notes */}
         {renderFloatingNotes()}
+
+        {/* Selection box */}
+        {renderSelectionBox()}
       </div>
 
       {/* Zoom controls */}
