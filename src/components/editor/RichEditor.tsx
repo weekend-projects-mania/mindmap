@@ -3,6 +3,8 @@ import "./editor.css";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import { common, createLowlight } from "lowlight";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -191,6 +193,10 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: Rich
         heading: {
           levels: [1, 2, 3],
         },
+        codeBlock: false, // Disable default codeBlock in favor of lowlight version
+      }),
+      CodeBlockLowlight.configure({
+        lowlight: createLowlight(common),
       }),
       Link.configure({
         openOnClick: true,

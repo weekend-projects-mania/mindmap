@@ -75,6 +75,73 @@
   border-radius: 0;
 }
 
+/* Syntax highlighting theme */
+.ProseMirror .hljs-comment,
+.ProseMirror .hljs-quote {
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+}
+
+.ProseMirror .hljs-keyword,
+.ProseMirror .hljs-selector-tag,
+.ProseMirror .hljs-addition {
+  color: hsl(280 80% 60%);
+}
+
+.ProseMirror .hljs-number,
+.ProseMirror .hljs-string,
+.ProseMirror .hljs-meta .hljs-meta-string,
+.ProseMirror .hljs-literal,
+.ProseMirror .hljs-doctag,
+.ProseMirror .hljs-regexp {
+  color: hsl(150 60% 45%);
+}
+
+.ProseMirror .hljs-title,
+.ProseMirror .hljs-section,
+.ProseMirror .hljs-name,
+.ProseMirror .hljs-selector-id,
+.ProseMirror .hljs-selector-class {
+  color: hsl(200 80% 55%);
+}
+
+.ProseMirror .hljs-attribute,
+.ProseMirror .hljs-attr,
+.ProseMirror .hljs-variable,
+.ProseMirror .hljs-template-variable,
+.ProseMirror .hljs-class .hljs-title,
+.ProseMirror .hljs-type {
+  color: hsl(35 80% 55%);
+}
+
+.ProseMirror .hljs-symbol,
+.ProseMirror .hljs-bullet,
+.ProseMirror .hljs-subst,
+.ProseMirror .hljs-meta,
+.ProseMirror .hljs-meta .hljs-keyword,
+.ProseMirror .hljs-selector-attr,
+.ProseMirror .hljs-selector-pseudo,
+.ProseMirror .hljs-link {
+  color: hsl(0 70% 60%);
+}
+
+.ProseMirror .hljs-built_in,
+.ProseMirror .hljs-deletion {
+  color: hsl(340 80% 60%);
+}
+
+.ProseMirror .hljs-formula {
+  background: hsl(var(--muted));
+}
+
+.ProseMirror .hljs-emphasis {
+  font-style: italic;
+}
+
+.ProseMirror .hljs-strong {
+  font-weight: 700;
+}
+
 .ProseMirror hr {
   border: none;
   border-top: 2px solid hsl(var(--border));
