@@ -7,6 +7,7 @@ export interface MindmapNode {
   collapsed: boolean;
   position?: { x: number; y: number }; // For manual positioning if needed
   edgeLabel?: string; // Label on the edge connecting this node to its parent
+  startLink?: string; // Optional URL link for the node
 }
 
 export interface FloatingNote {

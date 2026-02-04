@@ -79,6 +79,11 @@ const MindmapEditor = () => {
     updateNode(selectedNodeId, { title });
   };
 
+  const handleStartLinkChange = (startLink: string) => {
+    if (!selectedNodeId || isFloatingNote) return;
+    updateNode(selectedNodeId, { startLink });
+  };
+
   const renderCanvas = () => (
     <MindmapCanvas
       mindmap={activeMindmap!}
@@ -103,6 +108,8 @@ const MindmapEditor = () => {
         onChange={handleEditorContentChange}
         nodeTitle={selectedNode.title}
         onTitleChange={handleEditorTitleChange}
+        startLink={selectedNode.startLink}
+        onStartLinkChange={handleStartLinkChange}
       />
     ) : (
       <div className="h-full flex items-center justify-center text-muted-foreground">

@@ -36,6 +36,7 @@ import {
   Type,
   ChevronDown,
   Table2,
+  Link as LinkIcon,
 } from "lucide-react";
 import { useEffect, useCallback, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -45,6 +46,8 @@ interface RichEditorProps {
   onChange: (content: string) => void;
   nodeTitle: string;
   onTitleChange: (title: string) => void;
+  startLink?: string;
+  onStartLinkChange: (link: string) => void;
 }
 
 interface ToolbarButtonProps {
@@ -185,8 +188,9 @@ const FloatingToolbar = ({ editor }: { editor: Editor }) => {
 };
 
 
-export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: RichEditorProps) => {
+export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange, startLink, onStartLinkChange }: RichEditorProps) => {
   const [title, setTitle] = useState(nodeTitle);
+  const [link, setLink] = useState(startLink || "");
 
   const editor = useEditor({
     extensions: [
@@ -250,9 +254,20 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: Rich
     setTitle(nodeTitle);
   }, [nodeTitle]);
 
+  // Update link when node changes
+  useEffect(() => {
+    setLink(startLink || "");
+  }, [startLink]);
+
   const handleTitleBlur = () => {
     if (title.trim() && title !== nodeTitle) {
       onTitleChange(title.trim());
+    }
+  };
+
+  const handleLinkBlur = () => {
+    if (link !== startLink) {
+      onStartLinkChange(link.trim());
     }
   };
 
@@ -276,9 +291,28 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: Rich
                 (e.target as HTMLInputElement).blur();
               }
             }}
-            className="!text-4xl font-bold border-none shadow-none focus-visible:ring-0 px-0 h-auto mb-6 leading-tight"
+            className="!text-4xl font-bold border-none shadow-none focus-visible:ring-0 px-0 h-auto mb-2 leading-tight"
             placeholder="Node title..."
           />
+
+          {/* Start Link property */}
+          <div className="flex items-center gap-2 mb-6 text-muted-foreground">
+            <LinkIcon className="h-4 w-4 shrink-0" />
+            <span className="text-sm font-medium shrink-0">Start Link</span>
+            <Input
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              onBlur={handleLinkBlur}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleLinkBlur();
+                  (e.target as HTMLInputElement).blur();
+                }
+              }}
+              className="h-auto py-0 px-1 text-sm border-none shadow-none focus-visible:ring-0 text-foreground"
+              placeholder="https://..."
+            />
+          </div>
 
 
           {/* Editor content */}
