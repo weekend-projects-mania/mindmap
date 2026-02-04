@@ -24,6 +24,7 @@ const Index = () => {
     activeMindmapId,
     selectedNodeId,
     selectedNode,
+    selectedFloatingNote,
     setActiveMindmap,
     setSelectedNodeId,
     createMindmap,
@@ -34,7 +35,34 @@ const Index = () => {
     deleteNode,
     moveNode,
     toggleCollapse,
+    addFloatingNote,
+    updateFloatingNote,
+    deleteFloatingNote,
   } = useMindmapStore();
+
+  // Get selected content for editor (either node or floating note)
+  const selectedContent = selectedNode || selectedFloatingNote;
+  const isFloatingNote = selectedNodeId?.startsWith("floating:");
+
+  const handleEditorContentChange = (content: string) => {
+    if (!selectedNodeId) return;
+    if (isFloatingNote) {
+      const noteId = selectedNodeId.replace("floating:", "");
+      updateFloatingNote(noteId, { content });
+    } else {
+      updateNode(selectedNodeId, { content });
+    }
+  };
+
+  const handleEditorTitleChange = (title: string) => {
+    if (!selectedNodeId) return;
+    if (isFloatingNote) {
+      const noteId = selectedNodeId.replace("floating:", "");
+      updateFloatingNote(noteId, { title });
+    } else {
+      updateNode(selectedNodeId, { title });
+    }
+  };
 
   const renderCanvas = () => (
     <MindmapCanvas
@@ -46,17 +74,20 @@ const Index = () => {
       onUpdateNode={updateNode}
       onToggleCollapse={toggleCollapse}
       onMoveNode={moveNode}
+      onAddFloatingNote={addFloatingNote}
+      onUpdateFloatingNote={updateFloatingNote}
+      onDeleteFloatingNote={deleteFloatingNote}
     />
   );
 
   const renderEditor = () => (
-    selectedNode ? (
+    selectedContent ? (
       <RichEditor
         key={selectedNodeId}
-        content={selectedNode.content}
-        onChange={(content) => updateNode(selectedNodeId!, { content })}
-        nodeTitle={selectedNode.title}
-        onTitleChange={(title) => updateNode(selectedNodeId!, { title })}
+        content={selectedContent.content}
+        onChange={handleEditorContentChange}
+        nodeTitle={selectedContent.title}
+        onTitleChange={handleEditorTitleChange}
       />
     ) : (
       <div className="h-full flex items-center justify-center text-muted-foreground">
