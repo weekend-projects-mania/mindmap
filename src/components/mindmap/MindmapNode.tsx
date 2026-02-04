@@ -7,7 +7,6 @@ import {
   ChevronRight,
   Plus,
   Trash2,
-  GripVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -101,12 +100,6 @@ export const MindmapNodeComponent = ({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {/* Drag handle */}
-      {!isRoot && (
-        <div className="absolute -left-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-50 cursor-grab">
-          <GripVertical className="h-3 w-3 text-muted-foreground" />
-        </div>
-      )}
 
       {/* Collapse button */}
       {hasChildren && (
