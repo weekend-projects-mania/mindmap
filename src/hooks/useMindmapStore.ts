@@ -215,6 +215,23 @@ export const useMindmapStore = () => {
       if (!node || nodeId === mindmap.rootNodeId) return; // Can't delete root
 
       const parentId = node.parentId;
+      const parentNode = parentId ? mindmap.nodes[parentId] : null;
+      
+      // Determine which node to select after deletion
+      let nextSelectedId: string | null = null;
+      
+      if (parentNode) {
+        const siblings = parentNode.children.filter((id) => id !== nodeId);
+        
+        if (siblings.length > 0) {
+          // Select the sibling closest to the center
+          const middleIndex = Math.floor(siblings.length / 2);
+          nextSelectedId = siblings[middleIndex];
+        } else {
+          // No siblings, select the parent
+          nextSelectedId = parentId;
+        }
+      }
 
       setStore((prev) => {
         const currentMindmap = prev.mindmaps[prev.activeMindmapId!];
@@ -257,9 +274,9 @@ export const useMindmapStore = () => {
         };
       });
 
-      // Select the parent node after deletion
-      if (selectedNodeId === nodeId && parentId) {
-        setSelectedNodeId(parentId);
+      // Update selection after deletion
+      if (selectedNodeId === nodeId && nextSelectedId) {
+        setSelectedNodeId(nextSelectedId);
       }
     },
     [store.activeMindmapId, store.mindmaps, selectedNodeId]
