@@ -131,7 +131,7 @@ export const MindmapCanvas = ({
     }
   }, [mindmap.id]);
 
-  // Keyboard shortcuts for adding/deleting nodes
+  // Keyboard shortcuts for adding/deleting/navigating nodes
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if user is typing in an input or textarea
@@ -145,6 +145,9 @@ export const MindmapCanvas = ({
         return;
       }
 
+      const currentNode = mindmap.nodes[selectedNodeId];
+      if (!currentNode) return;
+
       if (e.key === "Enter") {
         e.preventDefault();
         onAddSibling(selectedNodeId);
@@ -157,12 +160,49 @@ export const MindmapCanvas = ({
         if (selectedNodeId !== mindmap.rootNodeId) {
           onDeleteNode(selectedNodeId);
         }
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        // Select parent node
+        if (currentNode.parentId) {
+          onSelectNode(currentNode.parentId);
+        }
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        // Select middle child (or first if odd number)
+        if (currentNode.children.length > 0 && !currentNode.collapsed) {
+          const middleIndex = Math.floor(currentNode.children.length / 2);
+          onSelectNode(currentNode.children[middleIndex]);
+        }
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        // Select left sibling
+        if (currentNode.parentId) {
+          const parentNode = mindmap.nodes[currentNode.parentId];
+          if (parentNode) {
+            const currentIndex = parentNode.children.indexOf(selectedNodeId);
+            if (currentIndex > 0) {
+              onSelectNode(parentNode.children[currentIndex - 1]);
+            }
+          }
+        }
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        // Select right sibling
+        if (currentNode.parentId) {
+          const parentNode = mindmap.nodes[currentNode.parentId];
+          if (parentNode) {
+            const currentIndex = parentNode.children.indexOf(selectedNodeId);
+            if (currentIndex < parentNode.children.length - 1) {
+              onSelectNode(parentNode.children[currentIndex + 1]);
+            }
+          }
+        }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedNodeId, onAddChild, onAddSibling, onDeleteNode, mindmap.rootNodeId]);
+  }, [selectedNodeId, onAddChild, onAddSibling, onDeleteNode, onSelectNode, mindmap.rootNodeId, mindmap.nodes]);
 
   // Pan handlers - RIGHT CLICK for panning
   const handleMouseDown = (e: React.MouseEvent) => {
