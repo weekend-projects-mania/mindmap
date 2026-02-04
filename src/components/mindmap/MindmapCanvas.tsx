@@ -280,7 +280,7 @@ export const MindmapCanvas = ({
         isSelected={selectedNodeId === `floating:${note.id}`}
         onSelect={() => onSelectNode(`floating:${note.id}`)}
         onDelete={() => onDeleteFloatingNote(note.id)}
-        onUpdateTitle={(title) => onUpdateFloatingNote(note.id, { title })}
+        onUpdateContent={(content) => onUpdateFloatingNote(note.id, { content })}
         onUpdatePosition={(position) => onUpdateFloatingNote(note.id, { position })}
         scale={transform.scale}
       />
