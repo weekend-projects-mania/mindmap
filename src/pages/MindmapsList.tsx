@@ -3,6 +3,16 @@ import { useMindmapStore } from "@/hooks/useMindmapStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -47,7 +57,17 @@ const MindmapsList = () => {
     }
   };
 
-  const handleOpenMindmap = (id: string) => {
+  const handleOpenMindmap = (id: string, e: React.MouseEvent) => {
+    // Don't navigate if clicked on interactive elements or if delete dialog is about to open
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('button') ||
+      target.closest('[role="menuitem"]') ||
+      target.closest('[role="menu"]') ||
+      target.closest('input')
+    ) {
+      return;
+    }
     setActiveMindmap(id);
     navigate(`/mindmap/${id}`);
   };
@@ -136,7 +156,7 @@ const MindmapsList = () => {
               <Card
                 key={mindmap.id}
                 className="group cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => handleOpenMindmap(mindmap.id)}
+                onClick={(e) => handleOpenMindmap(mindmap.id, e)}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
@@ -169,7 +189,7 @@ const MindmapsList = () => {
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" onCloseAutoFocus={(e) => e.preventDefault()}>
                         <DropdownMenuItem onClick={(e) => startEditing(mindmap.id, mindmap.name, e as unknown as React.MouseEvent)}>
                           <Edit2 className="h-4 w-4 mr-2" />
                           Rename
@@ -187,27 +207,6 @@ const MindmapsList = () => {
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    <Dialog
-                      open={deleteConfirmId === mindmap.id}
-                      onOpenChange={(open) => setDeleteConfirmId(open ? mindmap.id : null)}
-                    >
-                      <DialogContent onClick={(e) => e.stopPropagation()}>
-                        <DialogHeader>
-                          <DialogTitle>Delete Mindmap</DialogTitle>
-                          <DialogDescription>
-                            Are you sure you want to delete "{mindmap.name}"? This action cannot be undone.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <DialogFooter>
-                          <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>
-                            Cancel
-                          </Button>
-                          <Button variant="destructive" onClick={() => confirmDelete(mindmap.id)}>
-                            Delete
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
                   </div>
                   <CardDescription className="text-xs">
                     {Object.keys(mindmap.nodes).length} nodes
@@ -225,6 +224,30 @@ const MindmapsList = () => {
             ))}
           </div>
         )}
+
+        {/* Delete confirmation dialog - placed outside the card grid */}
+        <AlertDialog
+          open={deleteConfirmId !== null}
+          onOpenChange={(open) => !open && setDeleteConfirmId(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Mindmap</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{mindmaps.find(m => m.id === deleteConfirmId)?.name}"? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => deleteConfirmId && confirmDelete(deleteConfirmId)}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );
