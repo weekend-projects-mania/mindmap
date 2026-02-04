@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from "react";
-import { Mindmap, MindmapNode } from "@/types/mindmap";
+import { Mindmap, MindmapNode, FloatingNote } from "@/types/mindmap";
 import { MindmapNodeComponent } from "./MindmapNode";
+import { FloatingNoteComponent } from "./FloatingNoteComponent";
 import { cn } from "@/lib/utils";
 
 interface MindmapCanvasProps {
@@ -12,6 +13,9 @@ interface MindmapCanvasProps {
   onUpdateNode: (nodeId: string, updates: Partial<MindmapNode>) => void;
   onToggleCollapse: (nodeId: string) => void;
   onMoveNode: (nodeId: string, newParentId: string) => void;
+  onAddFloatingNote: (position: { x: number; y: number }) => void;
+  onUpdateFloatingNote: (noteId: string, updates: Partial<FloatingNote>) => void;
+  onDeleteFloatingNote: (noteId: string) => void;
 }
 
 interface LayoutNode {
@@ -36,6 +40,9 @@ export const MindmapCanvas = ({
   onUpdateNode,
   onToggleCollapse,
   onMoveNode,
+  onAddFloatingNote,
+  onUpdateFloatingNote,
+  onDeleteFloatingNote,
 }: MindmapCanvasProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
@@ -126,6 +133,19 @@ export const MindmapCanvas = ({
 
   const handleMouseUp = () => {
     setIsPanning(false);
+  };
+
+  // Double-click to create floating note
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    if (e.target === containerRef.current || (e.target as HTMLElement).classList.contains('canvas-background')) {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (rect) {
+        // Convert screen coordinates to canvas coordinates
+        const x = (e.clientX - rect.left - transform.x) / transform.scale;
+        const y = (e.clientY - rect.top - transform.y) / transform.scale;
+        onAddFloatingNote({ x, y });
+      }
+    }
   };
 
   // Zoom handler
@@ -250,6 +270,23 @@ export const MindmapCanvas = ({
     return nodes;
   };
 
+  // Render floating notes
+  const renderFloatingNotes = () => {
+    const floatingNotes = mindmap.floatingNotes || {};
+    return Object.values(floatingNotes).map((note) => (
+      <FloatingNoteComponent
+        key={note.id}
+        note={note}
+        isSelected={selectedNodeId === `floating:${note.id}`}
+        onSelect={() => onSelectNode(`floating:${note.id}`)}
+        onDelete={() => onDeleteFloatingNote(note.id)}
+        onUpdateTitle={(title) => onUpdateFloatingNote(note.id, { title })}
+        onUpdatePosition={(position) => onUpdateFloatingNote(note.id, { position })}
+        scale={transform.scale}
+      />
+    ));
+  };
+
   return (
     <div
       ref={containerRef}
@@ -262,6 +299,7 @@ export const MindmapCanvas = ({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
       onWheel={handleWheel}
+      onDoubleClick={handleDoubleClick}
     >
       {/* Background pattern */}
       <div className="canvas-background absolute inset-0" style={{
@@ -291,6 +329,9 @@ export const MindmapCanvas = ({
 
         {/* Nodes */}
         {renderNodes()}
+
+        {/* Floating notes */}
+        {renderFloatingNotes()}
       </div>
 
       {/* Zoom indicator */}

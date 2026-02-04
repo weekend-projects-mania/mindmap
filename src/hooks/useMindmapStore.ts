@@ -3,8 +3,10 @@ import {
   Mindmap,
   MindmapNode,
   MindmapStore,
+  FloatingNote,
   createNewMindmap,
   createNewNode,
+  createFloatingNote,
 } from "@/types/mindmap";
 
 const STORAGE_KEY = "mindmap-store";
@@ -276,9 +278,114 @@ export const useMindmapStore = () => {
     [updateNode, activeMindmap]
   );
 
+  const addFloatingNote = useCallback(
+    (position: { x: number; y: number }) => {
+      if (!store.activeMindmapId) return null;
+
+      const newNote = createFloatingNote(position);
+      setStore((prev) => {
+        const mindmap = prev.mindmaps[prev.activeMindmapId!];
+        if (!mindmap) return prev;
+
+        return {
+          ...prev,
+          mindmaps: {
+            ...prev.mindmaps,
+            [mindmap.id]: {
+              ...mindmap,
+              updatedAt: Date.now(),
+              floatingNotes: {
+                ...mindmap.floatingNotes,
+                [newNote.id]: newNote,
+              },
+            },
+          },
+        };
+      });
+
+      setSelectedNodeId(`floating:${newNote.id}`);
+      return newNote;
+    },
+    [store.activeMindmapId]
+  );
+
+  const updateFloatingNote = useCallback(
+    (noteId: string, updates: Partial<FloatingNote>) => {
+      if (!store.activeMindmapId) return;
+
+      setStore((prev) => {
+        const mindmap = prev.mindmaps[prev.activeMindmapId!];
+        if (!mindmap || !mindmap.floatingNotes[noteId]) return prev;
+
+        return {
+          ...prev,
+          mindmaps: {
+            ...prev.mindmaps,
+            [mindmap.id]: {
+              ...mindmap,
+              updatedAt: Date.now(),
+              floatingNotes: {
+                ...mindmap.floatingNotes,
+                [noteId]: { ...mindmap.floatingNotes[noteId], ...updates },
+              },
+            },
+          },
+        };
+      });
+    },
+    [store.activeMindmapId]
+  );
+
+  const deleteFloatingNote = useCallback(
+    (noteId: string) => {
+      if (!store.activeMindmapId) return;
+
+      setStore((prev) => {
+        const mindmap = prev.mindmaps[prev.activeMindmapId!];
+        if (!mindmap) return prev;
+
+        const { [noteId]: deleted, ...remaining } = mindmap.floatingNotes;
+
+        return {
+          ...prev,
+          mindmaps: {
+            ...prev.mindmaps,
+            [mindmap.id]: {
+              ...mindmap,
+              updatedAt: Date.now(),
+              floatingNotes: remaining,
+            },
+          },
+        };
+      });
+
+      if (selectedNodeId === `floating:${noteId}` && activeMindmap) {
+        setSelectedNodeId(activeMindmap.rootNodeId);
+      }
+    },
+    [store.activeMindmapId, selectedNodeId, activeMindmap]
+  );
+
+  // Get selected content (either node or floating note)
+  const getSelectedContent = useCallback(() => {
+    if (!activeMindmap || !selectedNodeId) return null;
+
+    if (selectedNodeId.startsWith("floating:")) {
+      const noteId = selectedNodeId.replace("floating:", "");
+      return activeMindmap.floatingNotes?.[noteId] || null;
+    }
+
+    return activeMindmap.nodes[selectedNodeId] || null;
+  }, [activeMindmap, selectedNodeId]);
+
   const selectedNode =
     activeMindmap && selectedNodeId
       ? activeMindmap.nodes[selectedNodeId]
+      : null;
+
+  const selectedFloatingNote =
+    activeMindmap && selectedNodeId?.startsWith("floating:")
+      ? activeMindmap.floatingNotes?.[selectedNodeId.replace("floating:", "")]
       : null;
 
   return {
@@ -288,6 +395,7 @@ export const useMindmapStore = () => {
     activeMindmapId: store.activeMindmapId,
     selectedNodeId,
     selectedNode,
+    selectedFloatingNote,
 
     // Actions
     setActiveMindmap,
@@ -300,5 +408,8 @@ export const useMindmapStore = () => {
     deleteNode,
     moveNode,
     toggleCollapse,
+    addFloatingNote,
+    updateFloatingNote,
+    deleteFloatingNote,
   };
 };

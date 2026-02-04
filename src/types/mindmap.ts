@@ -8,11 +8,19 @@ export interface MindmapNode {
   position?: { x: number; y: number }; // For manual positioning if needed
 }
 
+export interface FloatingNote {
+  id: string;
+  title: string;
+  content: string;
+  position: { x: number; y: number };
+}
+
 export interface Mindmap {
   id: string;
   name: string;
   rootNodeId: string;
   nodes: Record<string, MindmapNode>;
+  floatingNotes: Record<string, FloatingNote>;
   createdAt: number;
   updatedAt: number;
 }
@@ -34,6 +42,16 @@ export const createNewNode = (
   collapsed: false,
 });
 
+export const createFloatingNote = (
+  position: { x: number; y: number },
+  title: string = "New Note"
+): FloatingNote => ({
+  id: crypto.randomUUID(),
+  title,
+  content: "",
+  position,
+});
+
 export const createNewMindmap = (name: string = "Untitled Mindmap"): Mindmap => {
   const rootNode = createNewNode(null, "Main Topic");
   return {
@@ -41,6 +59,7 @@ export const createNewMindmap = (name: string = "Untitled Mindmap"): Mindmap => 
     name,
     rootNodeId: rootNode.id,
     nodes: { [rootNode.id]: rootNode },
+    floatingNotes: {},
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
