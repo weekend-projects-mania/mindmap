@@ -5,6 +5,8 @@ import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { common, createLowlight } from "lowlight";
+import { ReactNodeViewRenderer } from "@tiptap/react";
+import { CodeBlockComponent } from "./CodeBlockComponent";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -195,7 +197,11 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: Rich
         },
         codeBlock: false, // Disable default codeBlock in favor of lowlight version
       }),
-      CodeBlockLowlight.configure({
+      CodeBlockLowlight.extend({
+        addNodeView() {
+          return ReactNodeViewRenderer(CodeBlockComponent);
+        },
+      }).configure({
         lowlight: createLowlight(common),
       }),
       Link.configure({
