@@ -52,7 +52,43 @@
   font-style: italic;
 }
 
-/* Table styles */
+/* Table wrapper with add buttons */
+.table-wrapper {
+  position: relative;
+  margin: 1rem 0;
+  padding-right: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+
+.table-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.table-wrapper table td,
+.table-wrapper table th {
+  border: 1px solid hsl(var(--border));
+  padding: 0.5rem 0.75rem;
+  vertical-align: top;
+  min-width: 100px;
+}
+
+.table-wrapper table th {
+  background-color: hsl(var(--muted));
+  font-weight: 600;
+}
+
+.table-wrapper table td {
+  background-color: hsl(var(--background));
+}
+
+.table-wrapper table td > *,
+.table-wrapper table th > * {
+  margin: 0;
+}
+
+/* ProseMirror table fallback styles */
 .ProseMirror table {
   width: 100%;
   border-collapse: collapse;
