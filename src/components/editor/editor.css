@@ -52,12 +52,16 @@
   font-style: italic;
 }
 
-/* Table wrapper with add buttons */
+/* Table wrapper */
 .table-wrapper {
   position: relative;
   margin: 1rem 0;
-  padding-right: 2.5rem;
-  padding-bottom: 2.5rem;
+  width: 100%;
+}
+
+.table-wrapper .table-container {
+  width: 100%;
+  overflow: hidden;
 }
 
 .table-wrapper table {
@@ -71,7 +75,8 @@
   border: 1px solid hsl(var(--border));
   padding: 0.5rem 0.75rem;
   vertical-align: top;
-  min-width: 100px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .table-wrapper table th {
