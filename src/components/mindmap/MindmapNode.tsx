@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MindmapNode as NodeType } from "@/types/mindmap";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +42,48 @@ export const MindmapNodeComponent = ({
   const [editTitle, setEditTitle] = useState(node.title);
   const [isHovered, setIsHovered] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Listen for typing when selected to enter edit mode
+  useEffect(() => {
+    if (!isSelected || isEditing) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in another input/textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+        return;
+      }
+
+      // Ignore modifier keys, navigation, and special keys
+      if (
+        e.metaKey || e.ctrlKey || e.altKey ||
+        e.key === "Tab" || e.key === "Enter" || e.key === "Escape" ||
+        e.key === "Delete" || e.key === "Backspace" ||
+        e.key.startsWith("Arrow") || e.key.startsWith("F")
+      ) {
+        return;
+      }
+
+      // Only trigger for printable characters (single character keys)
+      if (e.key.length === 1) {
+        e.preventDefault();
+        setEditTitle(e.key);
+        setIsEditing(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isSelected, isEditing]);
+
+  // Focus and select input when editing starts
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
 
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -122,12 +164,12 @@ export const MindmapNodeComponent = ({
       {/* Title */}
       {isEditing ? (
         <Input
+          ref={inputRef}
           value={editTitle}
           onChange={(e) => setEditTitle(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           className="h-6 px-1 py-0 text-sm"
-          autoFocus
           onClick={(e) => e.stopPropagation()}
         />
       ) : (
