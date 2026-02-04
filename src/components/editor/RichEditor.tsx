@@ -224,13 +224,6 @@ const FloatingToolbar = ({ editor }: { editor: Editor }) => {
         )}
       </div>
 
-      {/* Table of contents */}
-      <ToolbarButton
-        onClick={() => {}}
-        title="Table of Contents"
-      >
-        <ListTree className="h-4 w-4" />
-      </ToolbarButton>
     </div>
   );
 };
