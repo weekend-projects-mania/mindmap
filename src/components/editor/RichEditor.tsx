@@ -40,20 +40,11 @@ interface ToolbarButtonProps {
   title?: string;
 }
 
-const ToolbarButton = ({
-  onClick,
-  isActive,
-  disabled,
-  children,
-  title,
-}: ToolbarButtonProps) => (
+const ToolbarButton = ({ onClick, isActive, disabled, children, title }: ToolbarButtonProps) => (
   <Button
     variant="ghost"
     size="icon"
-    className={cn(
-      "h-8 w-8",
-      isActive && "bg-accent text-accent-foreground"
-    )}
+    className={cn("h-8 w-8", isActive && "bg-accent text-accent-foreground")}
     onClick={onClick}
     disabled={disabled}
     title={title}
@@ -68,12 +59,7 @@ const EditorToolbar = ({ editor }: { editor: Editor }) => {
 
   const setLink = useCallback(() => {
     if (linkUrl) {
-      editor
-        .chain()
-        .focus()
-        .extendMarkRange("link")
-        .setLink({ href: linkUrl })
-        .run();
+      editor.chain().focus().extendMarkRange("link").setLink({ href: linkUrl }).run();
     }
     setShowLinkInput(false);
     setLinkUrl("");
@@ -177,19 +163,12 @@ const EditorToolbar = ({ editor }: { editor: Editor }) => {
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
-      <ToolbarButton
-        onClick={() => editor.chain().focus().setHorizontalRule().run()}
-        title="Horizontal Rule"
-      >
+      <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Horizontal Rule">
         <Minus className="h-4 w-4" />
       </ToolbarButton>
 
       <div className="relative">
-        <ToolbarButton
-          onClick={handleLinkClick}
-          isActive={editor.isActive("link")}
-          title="Link"
-        >
+        <ToolbarButton onClick={handleLinkClick} isActive={editor.isActive("link")} title="Link">
           <LinkIcon className="h-4 w-4" />
         </ToolbarButton>
         {showLinkInput && (
@@ -214,30 +193,17 @@ const EditorToolbar = ({ editor }: { editor: Editor }) => {
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
-      <ToolbarButton
-        onClick={() => editor.chain().focus().undo().run()}
-        disabled={!editor.can().undo()}
-        title="Undo"
-      >
+      <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
         <Undo className="h-4 w-4" />
       </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().redo().run()}
-        disabled={!editor.can().redo()}
-        title="Redo"
-      >
+      <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo">
         <Redo className="h-4 w-4" />
       </ToolbarButton>
     </div>
   );
 };
 
-export const RichEditor = ({
-  content,
-  onChange,
-  nodeTitle,
-  onTitleChange,
-}: RichEditorProps) => {
+export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: RichEditorProps) => {
   const [title, setTitle] = useState(nodeTitle);
 
   const editor = useEditor({
@@ -260,8 +226,7 @@ export const RichEditor = ({
     },
     editorProps: {
       attributes: {
-        class:
-          "prose prose-sm max-w-none focus:outline-none min-h-[200px] p-4",
+        class: "prose prose-sm max-w-none focus:outline-none min-h-[200px] p-4",
       },
     },
   });
@@ -312,7 +277,7 @@ export const RichEditor = ({
 
       {/* Editor content */}
       <div className="flex-1 overflow-auto flex justify-center">
-        <div className="w-full max-w-3xl">
+        <div className="w-full max-w-xl">
           <EditorContent editor={editor} className="h-full" />
         </div>
       </div>
