@@ -42,6 +42,7 @@ export const MindmapNodeComponent = ({
   const [editTitle, setEditTitle] = useState(node.title);
   const [isHovered, setIsHovered] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [startedByTyping, setStartedByTyping] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Listen for typing when selected to enter edit mode
@@ -69,6 +70,7 @@ export const MindmapNodeComponent = ({
       if (e.key.length === 1) {
         e.preventDefault();
         setEditTitle(e.key);
+        setStartedByTyping(true);
         setIsEditing(true);
       }
     };
@@ -77,11 +79,18 @@ export const MindmapNodeComponent = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isSelected, isEditing]);
 
-  // Focus and select input when editing starts
+  // Focus input when editing starts, select all only if started by double-click
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
-      inputRef.current.select();
+      if (!startedByTyping) {
+        inputRef.current.select();
+      } else {
+        // Move cursor to end when started by typing
+        const len = inputRef.current.value.length;
+        inputRef.current.setSelectionRange(len, len);
+      }
+      setStartedByTyping(false);
     }
   }, [isEditing]);
 
