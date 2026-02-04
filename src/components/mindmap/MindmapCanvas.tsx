@@ -70,6 +70,7 @@ export const MindmapCanvas = ({
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionBox, setSelectionBox] = useState<SelectionBox | null>(null);
   const [selectedNodeIds, setSelectedNodeIds] = useState<Set<string>>(new Set());
+  const justFinishedSelectingRef = useRef(false);
 
   // Calculate tree layout
   const calculateLayout = useCallback((): Map<string, LayoutNode> => {
@@ -247,6 +248,12 @@ export const MindmapCanvas = ({
 
   // Click on empty space to deselect
   const handleCanvasClick = (e: React.MouseEvent) => {
+    // Skip if we just finished a selection drag
+    if (justFinishedSelectingRef.current) {
+      justFinishedSelectingRef.current = false;
+      return;
+    }
+    
     if (e.target === containerRef.current || (e.target as HTMLElement).classList.contains('canvas-background')) {
       // Deselect floating notes (keep tree node selection for editor)
       if (selectedNodeId?.startsWith("floating:")) {
@@ -254,6 +261,7 @@ export const MindmapCanvas = ({
       }
       // Clear multi-selection on click
       setSelectedNodeIds(new Set());
+      onMultiSelectionChange?.(0);
     }
   };
 
@@ -288,6 +296,7 @@ export const MindmapCanvas = ({
       const isRealSelection = boxWidth > 5 || boxHeight > 5;
 
       if (isRealSelection) {
+        justFinishedSelectingRef.current = true;
         const newSelectedIds = new Set<string>();
 
         // Check tree nodes
