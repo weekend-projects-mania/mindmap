@@ -311,8 +311,10 @@ export const RichEditor = ({
       <EditorToolbar editor={editor} />
 
       {/* Editor content */}
-      <div className="flex-1 overflow-auto">
-        <EditorContent editor={editor} className="h-full" />
+      <div className="flex-1 overflow-auto flex justify-center">
+        <div className="w-full max-w-3xl">
+          <EditorContent editor={editor} className="h-full" />
+        </div>
       </div>
     </div>
   );
