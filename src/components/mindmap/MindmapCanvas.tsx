@@ -9,7 +9,7 @@ import { Maximize2 } from "lucide-react";
 interface MindmapCanvasProps {
   mindmap: Mindmap;
   selectedNodeId: string | null;
-  onSelectNode: (nodeId: string) => void;
+  onSelectNode: (nodeId: string | null) => void;
   onAddChild: (parentId: string) => void;
   onAddSibling: (nodeId: string) => void;
   onDeleteNode: (nodeId: string) => void;
@@ -19,6 +19,8 @@ interface MindmapCanvasProps {
   onAddFloatingNote: (position: { x: number; y: number }) => void;
   onUpdateFloatingNote: (noteId: string, updates: Partial<FloatingNote>) => void;
   onDeleteFloatingNote: (noteId: string) => void;
+  multiSelectedCount?: number;
+  onMultiSelectionChange?: (count: number) => void;
 }
 
 interface LayoutNode {
@@ -56,6 +58,7 @@ export const MindmapCanvas = ({
   onAddFloatingNote,
   onUpdateFloatingNote,
   onDeleteFloatingNote,
+  onMultiSelectionChange,
 }: MindmapCanvasProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
@@ -279,46 +282,59 @@ export const MindmapCanvas = ({
       const minY = Math.min(selectionBox.startY, selectionBox.endY);
       const maxY = Math.max(selectionBox.startY, selectionBox.endY);
 
-      const newSelectedIds = new Set<string>();
+      // Only consider it a real selection if the box has meaningful size
+      const boxWidth = Math.abs(selectionBox.endX - selectionBox.startX);
+      const boxHeight = Math.abs(selectionBox.endY - selectionBox.startY);
+      const isRealSelection = boxWidth > 5 || boxHeight > 5;
 
-      // Check tree nodes
-      layout.forEach((nodeLayout, nodeId) => {
-        const nodeRight = nodeLayout.x + nodeLayout.width;
-        const nodeBottom = nodeLayout.y + nodeLayout.height;
+      if (isRealSelection) {
+        const newSelectedIds = new Set<string>();
+
+        // Check tree nodes
+        layout.forEach((nodeLayout, nodeId) => {
+          const nodeRight = nodeLayout.x + nodeLayout.width;
+          const nodeBottom = nodeLayout.y + nodeLayout.height;
+          
+          // Check if node intersects with selection box
+          if (
+            nodeLayout.x < maxX &&
+            nodeRight > minX &&
+            nodeLayout.y < maxY &&
+            nodeBottom > minY
+          ) {
+            newSelectedIds.add(nodeId);
+          }
+        });
+
+        // Check floating notes
+        const floatingNotes = mindmap.floatingNotes || {};
+        Object.values(floatingNotes).forEach((note) => {
+          const noteRight = note.position.x + FLOATING_NOTE_WIDTH;
+          const noteBottom = note.position.y + FLOATING_NOTE_HEIGHT;
+          
+          if (
+            note.position.x < maxX &&
+            noteRight > minX &&
+            note.position.y < maxY &&
+            noteBottom > minY
+          ) {
+            newSelectedIds.add(`floating:${note.id}`);
+          }
+        });
+
+        setSelectedNodeIds(newSelectedIds);
         
-        // Check if node intersects with selection box
-        if (
-          nodeLayout.x < maxX &&
-          nodeRight > minX &&
-          nodeLayout.y < maxY &&
-          nodeBottom > minY
-        ) {
-          newSelectedIds.add(nodeId);
-        }
-      });
-
-      // Check floating notes
-      const floatingNotes = mindmap.floatingNotes || {};
-      Object.values(floatingNotes).forEach((note) => {
-        const noteRight = note.position.x + FLOATING_NOTE_WIDTH;
-        const noteBottom = note.position.y + FLOATING_NOTE_HEIGHT;
+        // Notify parent about multi-selection count
+        onMultiSelectionChange?.(newSelectedIds.size);
         
-        if (
-          note.position.x < maxX &&
-          noteRight > minX &&
-          note.position.y < maxY &&
-          noteBottom > minY
-        ) {
-          newSelectedIds.add(`floating:${note.id}`);
+        // If only one item selected, also set it as the main selection
+        if (newSelectedIds.size === 1) {
+          const singleId = Array.from(newSelectedIds)[0];
+          onSelectNode(singleId);
+        } else if (newSelectedIds.size > 1) {
+          // Clear the single selection when multiple are selected
+          onSelectNode(null);
         }
-      });
-
-      setSelectedNodeIds(newSelectedIds);
-      
-      // If only one item selected, also set it as the main selection
-      if (newSelectedIds.size === 1) {
-        const singleId = Array.from(newSelectedIds)[0];
-        onSelectNode(singleId);
       }
     }
     
@@ -458,7 +474,11 @@ export const MindmapCanvas = ({
             node={node}
             isSelected={selectedNodeId === nodeId || selectedNodeIds.has(nodeId)}
             isRoot={nodeId === mindmap.rootNodeId}
-            onSelect={() => onSelectNode(nodeId)}
+            onSelect={() => {
+              onSelectNode(nodeId);
+              setSelectedNodeIds(new Set());
+              onMultiSelectionChange?.(0);
+            }}
             onAddChild={() => onAddChild(nodeId)}
             onDelete={() => onDeleteNode(nodeId)}
             onToggleCollapse={() => onToggleCollapse(nodeId)}
@@ -488,7 +508,11 @@ export const MindmapCanvas = ({
         key={note.id}
         note={note}
         isSelected={selectedNodeId === `floating:${note.id}` || selectedNodeIds.has(`floating:${note.id}`)}
-        onSelect={() => onSelectNode(`floating:${note.id}`)}
+        onSelect={() => {
+          onSelectNode(`floating:${note.id}`);
+          setSelectedNodeIds(new Set());
+          onMultiSelectionChange?.(0);
+        }}
         onDelete={() => onDeleteFloatingNote(note.id)}
         onUpdateContent={(content) => onUpdateFloatingNote(note.id, { content })}
         onUpdatePosition={(position) => onUpdateFloatingNote(note.id, { position })}
@@ -599,16 +623,15 @@ export const MindmapCanvas = ({
       >
         {/* Connection lines and labels SVG */}
         <svg
-          className="absolute"
+          className="absolute pointer-events-none"
           style={{
             left: -2000,
             top: -2000,
             width: 4000,
             height: 4000,
-            pointerEvents: "none",
           }}
         >
-          <g transform="translate(2000, 2000)" style={{ pointerEvents: "auto" }}>
+          <g transform="translate(2000, 2000)">
             {renderConnections()}
           </g>
         </svg>
