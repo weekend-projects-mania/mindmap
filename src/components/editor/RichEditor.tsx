@@ -62,26 +62,6 @@ const ToolbarButton = ({ onClick, isActive, disabled, children, title }: Toolbar
 );
 
 const FloatingToolbar = ({ editor }: { editor: Editor }) => {
-  const [showLinkInput, setShowLinkInput] = useState(false);
-  const [linkUrl, setLinkUrl] = useState("");
-
-  const setLink = useCallback(() => {
-    if (linkUrl) {
-      editor.chain().focus().extendMarkRange("link").setLink({ href: linkUrl }).run();
-    }
-    setShowLinkInput(false);
-    setLinkUrl("");
-  }, [editor, linkUrl]);
-
-  const handleLinkClick = () => {
-    if (editor.isActive("link")) {
-      editor.chain().focus().unsetLink().run();
-    } else {
-      const previousUrl = editor.getAttributes("link").href;
-      setLinkUrl(previousUrl || "");
-      setShowLinkInput(true);
-    }
-  };
 
   return (
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-background border rounded-lg shadow-lg p-1.5 flex items-center gap-0.5">
@@ -192,30 +172,6 @@ const FloatingToolbar = ({ editor }: { editor: Editor }) => {
         <Code className="h-4 w-4" />
       </ToolbarButton>
 
-      {/* Link */}
-      <div className="relative">
-        <ToolbarButton onClick={handleLinkClick} isActive={editor.isActive("link")} title="Link">
-          <LinkIcon className="h-4 w-4" />
-        </ToolbarButton>
-        {showLinkInput && (
-          <div className="absolute bottom-full left-0 mb-2 z-10 bg-popover border rounded-md shadow-md p-2 flex gap-2">
-            <Input
-              value={linkUrl}
-              onChange={(e) => setLinkUrl(e.target.value)}
-              placeholder="Enter URL..."
-              className="h-8 w-48 text-sm"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") setLink();
-                if (e.key === "Escape") setShowLinkInput(false);
-              }}
-              autoFocus
-            />
-            <Button size="sm" onClick={setLink}>
-              Add
-            </Button>
-          </div>
-        )}
-      </div>
 
     </div>
   );
