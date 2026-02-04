@@ -33,7 +33,7 @@ const MindmapEditor = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>("both");
-  const [multiSelectedCount, setMultiSelectedCount] = useState(0);
+
   const {
     mindmaps,
     activeMindmap,
@@ -99,42 +99,25 @@ const MindmapEditor = () => {
       onAddFloatingNote={addFloatingNote}
       onUpdateFloatingNote={updateFloatingNote}
       onDeleteFloatingNote={deleteFloatingNote}
-      onMultiSelectionChange={setMultiSelectedCount}
     />
   );
 
-  const renderEditor = () => {
-    // Show message when multiple nodes are selected
-    if (multiSelectedCount > 1) {
-      return (
-        <div className="h-full flex items-center justify-center text-muted-foreground">
-          <p>Select one node to edit its content</p>
-        </div>
-      );
-    }
-    
-    // Show editor when a single node is selected (not a floating note)
-    if (selectedNode) {
-      return (
-        <RichEditor
-          key={selectedNodeId}
-          content={selectedNode.content}
-          onChange={handleEditorContentChange}
-          nodeTitle={selectedNode.title}
-          onTitleChange={handleEditorTitleChange}
-          startLink={selectedNode.startLink}
-          onStartLinkChange={handleStartLinkChange}
-        />
-      );
-    }
-    
-    // Default message when nothing is selected
-    return (
+  const renderEditor = () =>
+    selectedNode ? (
+      <RichEditor
+        key={selectedNodeId}
+        content={selectedNode.content}
+        onChange={handleEditorContentChange}
+        nodeTitle={selectedNode.title}
+        onTitleChange={handleEditorTitleChange}
+        startLink={selectedNode.startLink}
+        onStartLinkChange={handleStartLinkChange}
+      />
+    ) : (
       <div className="h-full flex items-center justify-center text-muted-foreground">
         <p>Select a node to edit its content</p>
       </div>
     );
-  };
 
   if (!activeMindmap) {
     return (

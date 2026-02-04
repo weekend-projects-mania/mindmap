@@ -9,7 +9,7 @@ import { Maximize2 } from "lucide-react";
 interface MindmapCanvasProps {
   mindmap: Mindmap;
   selectedNodeId: string | null;
-  onSelectNode: (nodeId: string | null) => void;
+  onSelectNode: (nodeId: string) => void;
   onAddChild: (parentId: string) => void;
   onAddSibling: (nodeId: string) => void;
   onDeleteNode: (nodeId: string) => void;
@@ -19,8 +19,6 @@ interface MindmapCanvasProps {
   onAddFloatingNote: (position: { x: number; y: number }) => void;
   onUpdateFloatingNote: (noteId: string, updates: Partial<FloatingNote>) => void;
   onDeleteFloatingNote: (noteId: string) => void;
-  multiSelectedCount?: number;
-  onMultiSelectionChange?: (count: number) => void;
 }
 
 interface LayoutNode {
@@ -58,7 +56,6 @@ export const MindmapCanvas = ({
   onAddFloatingNote,
   onUpdateFloatingNote,
   onDeleteFloatingNote,
-  onMultiSelectionChange,
 }: MindmapCanvasProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
@@ -70,7 +67,6 @@ export const MindmapCanvas = ({
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionBox, setSelectionBox] = useState<SelectionBox | null>(null);
   const [selectedNodeIds, setSelectedNodeIds] = useState<Set<string>>(new Set());
-  const justFinishedSelectingRef = useRef(false);
 
   // Calculate tree layout
   const calculateLayout = useCallback((): Map<string, LayoutNode> => {
@@ -248,12 +244,6 @@ export const MindmapCanvas = ({
 
   // Click on empty space to deselect
   const handleCanvasClick = (e: React.MouseEvent) => {
-    // Skip if we just finished a selection drag
-    if (justFinishedSelectingRef.current) {
-      justFinishedSelectingRef.current = false;
-      return;
-    }
-    
     if (e.target === containerRef.current || (e.target as HTMLElement).classList.contains('canvas-background')) {
       // Deselect floating notes (keep tree node selection for editor)
       if (selectedNodeId?.startsWith("floating:")) {
@@ -261,7 +251,6 @@ export const MindmapCanvas = ({
       }
       // Clear multi-selection on click
       setSelectedNodeIds(new Set());
-      onMultiSelectionChange?.(0);
     }
   };
 
@@ -290,60 +279,46 @@ export const MindmapCanvas = ({
       const minY = Math.min(selectionBox.startY, selectionBox.endY);
       const maxY = Math.max(selectionBox.startY, selectionBox.endY);
 
-      // Only consider it a real selection if the box has meaningful size
-      const boxWidth = Math.abs(selectionBox.endX - selectionBox.startX);
-      const boxHeight = Math.abs(selectionBox.endY - selectionBox.startY);
-      const isRealSelection = boxWidth > 5 || boxHeight > 5;
+      const newSelectedIds = new Set<string>();
 
-      if (isRealSelection) {
-        justFinishedSelectingRef.current = true;
-        const newSelectedIds = new Set<string>();
-
-        // Check tree nodes
-        layout.forEach((nodeLayout, nodeId) => {
-          const nodeRight = nodeLayout.x + nodeLayout.width;
-          const nodeBottom = nodeLayout.y + nodeLayout.height;
-          
-          // Check if node intersects with selection box
-          if (
-            nodeLayout.x < maxX &&
-            nodeRight > minX &&
-            nodeLayout.y < maxY &&
-            nodeBottom > minY
-          ) {
-            newSelectedIds.add(nodeId);
-          }
-        });
-
-        // Check floating notes
-        const floatingNotes = mindmap.floatingNotes || {};
-        Object.values(floatingNotes).forEach((note) => {
-          const noteRight = note.position.x + FLOATING_NOTE_WIDTH;
-          const noteBottom = note.position.y + FLOATING_NOTE_HEIGHT;
-          
-          if (
-            note.position.x < maxX &&
-            noteRight > minX &&
-            note.position.y < maxY &&
-            noteBottom > minY
-          ) {
-            newSelectedIds.add(`floating:${note.id}`);
-          }
-        });
-
-        setSelectedNodeIds(newSelectedIds);
+      // Check tree nodes
+      layout.forEach((nodeLayout, nodeId) => {
+        const nodeRight = nodeLayout.x + nodeLayout.width;
+        const nodeBottom = nodeLayout.y + nodeLayout.height;
         
-        // Notify parent about multi-selection count
-        onMultiSelectionChange?.(newSelectedIds.size);
-        
-        // If only one item selected, also set it as the main selection
-        if (newSelectedIds.size === 1) {
-          const singleId = Array.from(newSelectedIds)[0];
-          onSelectNode(singleId);
-        } else if (newSelectedIds.size > 1) {
-          // Clear the single selection when multiple are selected
-          onSelectNode(null);
+        // Check if node intersects with selection box
+        if (
+          nodeLayout.x < maxX &&
+          nodeRight > minX &&
+          nodeLayout.y < maxY &&
+          nodeBottom > minY
+        ) {
+          newSelectedIds.add(nodeId);
         }
+      });
+
+      // Check floating notes
+      const floatingNotes = mindmap.floatingNotes || {};
+      Object.values(floatingNotes).forEach((note) => {
+        const noteRight = note.position.x + FLOATING_NOTE_WIDTH;
+        const noteBottom = note.position.y + FLOATING_NOTE_HEIGHT;
+        
+        if (
+          note.position.x < maxX &&
+          noteRight > minX &&
+          note.position.y < maxY &&
+          noteBottom > minY
+        ) {
+          newSelectedIds.add(`floating:${note.id}`);
+        }
+      });
+
+      setSelectedNodeIds(newSelectedIds);
+      
+      // If only one item selected, also set it as the main selection
+      if (newSelectedIds.size === 1) {
+        const singleId = Array.from(newSelectedIds)[0];
+        onSelectNode(singleId);
       }
     }
     
@@ -481,13 +456,9 @@ export const MindmapCanvas = ({
         >
           <MindmapNodeComponent
             node={node}
-            isSelected={selectedNodeIds.size > 0 ? selectedNodeIds.has(nodeId) : selectedNodeId === nodeId}
+            isSelected={selectedNodeId === nodeId || selectedNodeIds.has(nodeId)}
             isRoot={nodeId === mindmap.rootNodeId}
-            onSelect={() => {
-              onSelectNode(nodeId);
-              setSelectedNodeIds(new Set());
-              onMultiSelectionChange?.(0);
-            }}
+            onSelect={() => onSelectNode(nodeId)}
             onAddChild={() => onAddChild(nodeId)}
             onDelete={() => onDeleteNode(nodeId)}
             onToggleCollapse={() => onToggleCollapse(nodeId)}
@@ -516,12 +487,8 @@ export const MindmapCanvas = ({
       <FloatingNoteComponent
         key={note.id}
         note={note}
-        isSelected={selectedNodeIds.size > 0 ? selectedNodeIds.has(`floating:${note.id}`) : selectedNodeId === `floating:${note.id}`}
-        onSelect={() => {
-          onSelectNode(`floating:${note.id}`);
-          setSelectedNodeIds(new Set());
-          onMultiSelectionChange?.(0);
-        }}
+        isSelected={selectedNodeId === `floating:${note.id}` || selectedNodeIds.has(`floating:${note.id}`)}
+        onSelect={() => onSelectNode(`floating:${note.id}`)}
         onDelete={() => onDeleteFloatingNote(note.id)}
         onUpdateContent={(content) => onUpdateFloatingNote(note.id, { content })}
         onUpdatePosition={(position) => onUpdateFloatingNote(note.id, { position })}
@@ -625,7 +592,7 @@ export const MindmapCanvas = ({
       
       {/* Transform container */}
       <div
-        className="absolute origin-top-left select-none"
+        className="absolute origin-top-left"
         style={{
           transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
         }}
@@ -638,9 +605,10 @@ export const MindmapCanvas = ({
             top: -2000,
             width: 4000,
             height: 4000,
+            pointerEvents: "none",
           }}
         >
-          <g transform="translate(2000, 2000)">
+          <g transform="translate(2000, 2000)" style={{ pointerEvents: "auto" }}>
             {renderConnections()}
           </g>
         </svg>

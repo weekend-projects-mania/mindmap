@@ -73,11 +73,7 @@ export const EdgeLabel = ({
   }
 
   return (
-    <g 
-      onDoubleClick={handleDoubleClick} 
-      style={{ cursor: "pointer" }}
-      className="select-none"
-    >
+    <g onDoubleClick={handleDoubleClick} style={{ cursor: "pointer" }}>
       {/* Invisible larger hit area */}
       <rect
         x={x - 30}
@@ -85,7 +81,6 @@ export const EdgeLabel = ({
         width={60}
         height={20}
         fill="transparent"
-        style={{ pointerEvents: 'all' }}
       />
       {label ? (
         <text
@@ -93,21 +88,22 @@ export const EdgeLabel = ({
           y={y}
           textAnchor="middle"
           dominantBaseline="middle"
-          className="text-xs fill-muted-foreground select-none"
-          style={{ fontSize: "11px", pointerEvents: 'none' }}
+          className="text-xs fill-muted-foreground pointer-events-none"
+          style={{ fontSize: "11px" }}
         >
           {label}
         </text>
       ) : (
-        <rect
-          x={x - 4}
-          y={y - 4}
-          width={8}
-          height={8}
-          rx={1}
-          className="fill-muted-foreground/20 hover:fill-primary/40 transition-colors"
-          style={{ pointerEvents: 'none' }}
-        />
+        <text
+          x={x}
+          y={y}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          className="text-xs fill-muted-foreground/30 pointer-events-none italic"
+          style={{ fontSize: "10px" }}
+        >
+          +
+        </text>
       )}
     </g>
   );
