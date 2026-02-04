@@ -208,29 +208,37 @@ export const useMindmapStore = () => {
     (nodeId: string) => {
       if (!store.activeMindmapId) return;
 
-      setStore((prev) => {
-        const mindmap = prev.mindmaps[prev.activeMindmapId!];
-        if (!mindmap) return prev;
+      const mindmap = store.mindmaps[store.activeMindmapId];
+      if (!mindmap) return;
 
-        const node = mindmap.nodes[nodeId];
-        if (!node || nodeId === mindmap.rootNodeId) return prev; // Can't delete root
+      const node = mindmap.nodes[nodeId];
+      if (!node || nodeId === mindmap.rootNodeId) return; // Can't delete root
+
+      const parentId = node.parentId;
+
+      setStore((prev) => {
+        const currentMindmap = prev.mindmaps[prev.activeMindmapId!];
+        if (!currentMindmap) return prev;
+
+        const nodeToDelete = currentMindmap.nodes[nodeId];
+        if (!nodeToDelete || nodeId === currentMindmap.rootNodeId) return prev;
 
         // Collect all descendant IDs
         const getAllDescendants = (id: string): string[] => {
-          const n = mindmap.nodes[id];
+          const n = currentMindmap.nodes[id];
           if (!n) return [];
           return [id, ...n.children.flatMap(getAllDescendants)];
         };
 
         const toDelete = new Set(getAllDescendants(nodeId));
-        const newNodes = { ...mindmap.nodes };
+        const newNodes = { ...currentMindmap.nodes };
         toDelete.forEach((id) => delete newNodes[id]);
 
         // Remove from parent's children
-        if (node.parentId && newNodes[node.parentId]) {
-          newNodes[node.parentId] = {
-            ...newNodes[node.parentId],
-            children: newNodes[node.parentId].children.filter(
+        if (nodeToDelete.parentId && newNodes[nodeToDelete.parentId]) {
+          newNodes[nodeToDelete.parentId] = {
+            ...newNodes[nodeToDelete.parentId],
+            children: newNodes[nodeToDelete.parentId].children.filter(
               (id) => id !== nodeId
             ),
           };
@@ -240,8 +248,8 @@ export const useMindmapStore = () => {
           ...prev,
           mindmaps: {
             ...prev.mindmaps,
-            [mindmap.id]: {
-              ...mindmap,
+            [currentMindmap.id]: {
+              ...currentMindmap,
               updatedAt: Date.now(),
               nodes: newNodes,
             },
@@ -249,11 +257,12 @@ export const useMindmapStore = () => {
         };
       });
 
-      if (selectedNodeId === nodeId && activeMindmap) {
-        setSelectedNodeId(activeMindmap.rootNodeId);
+      // Select the parent node after deletion
+      if (selectedNodeId === nodeId && parentId) {
+        setSelectedNodeId(parentId);
       }
     },
-    [store.activeMindmapId, selectedNodeId, activeMindmap]
+    [store.activeMindmapId, store.mindmaps, selectedNodeId]
   );
 
   const moveNode = useCallback(
