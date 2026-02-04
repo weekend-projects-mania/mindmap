@@ -6,6 +6,7 @@ export interface MindmapNode {
   children: string[]; // Array of child node IDs
   collapsed: boolean;
   position?: { x: number; y: number }; // For manual positioning if needed
+  edgeLabel?: string; // Label on the edge connecting this node to its parent
 }
 
 export interface FloatingNote {
