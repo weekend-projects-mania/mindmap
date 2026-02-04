@@ -276,7 +276,7 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: Rich
                 (e.target as HTMLInputElement).blur();
               }
             }}
-            className="text-4xl font-bold border-none shadow-none focus-visible:ring-0 px-0 h-auto mb-6 leading-tight"
+            className="!text-4xl font-bold border-none shadow-none focus-visible:ring-0 px-0 h-auto mb-6 leading-tight"
             placeholder="Node title..."
           />
 
