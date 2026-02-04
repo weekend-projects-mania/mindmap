@@ -8,11 +8,16 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from "@/components/ui/resizable";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Brain } from "lucide-react";
+import { Brain, PanelLeft, PanelRight, Columns2 } from "lucide-react";
+
+type ViewMode = "canvas" | "both" | "editor";
 
 const Index = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("both");
+
   const {
     mindmaps,
     activeMindmap,
@@ -31,6 +36,35 @@ const Index = () => {
     toggleCollapse,
   } = useMindmapStore();
 
+  const renderCanvas = () => (
+    <MindmapCanvas
+      mindmap={activeMindmap!}
+      selectedNodeId={selectedNodeId}
+      onSelectNode={setSelectedNodeId}
+      onAddChild={addChildNode}
+      onDeleteNode={deleteNode}
+      onUpdateNode={updateNode}
+      onToggleCollapse={toggleCollapse}
+      onMoveNode={moveNode}
+    />
+  );
+
+  const renderEditor = () => (
+    selectedNode ? (
+      <RichEditor
+        key={selectedNodeId}
+        content={selectedNode.content}
+        onChange={(content) => updateNode(selectedNodeId!, { content })}
+        nodeTitle={selectedNode.title}
+        onTitleChange={(title) => updateNode(selectedNodeId!, { title })}
+      />
+    ) : (
+      <div className="h-full flex items-center justify-center text-muted-foreground">
+        <p>Select a node to edit its content</p>
+      </div>
+    )
+  );
+
   return (
     <TooltipProvider>
       <div className="h-screen flex overflow-hidden bg-background">
@@ -46,60 +80,77 @@ const Index = () => {
           onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         />
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {activeMindmap ? (
-          <ResizablePanelGroup direction="horizontal" className="flex-1">
-            {/* Mindmap canvas */}
-            <ResizablePanel defaultSize={60} minSize={30}>
-              <MindmapCanvas
-                mindmap={activeMindmap}
-                selectedNodeId={selectedNodeId}
-                onSelectNode={setSelectedNodeId}
-                onAddChild={addChildNode}
-                onDeleteNode={deleteNode}
-                onUpdateNode={updateNode}
-                onToggleCollapse={toggleCollapse}
-                onMoveNode={moveNode}
-              />
-            </ResizablePanel>
+        {/* Main content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {activeMindmap ? (
+            <>
+              {/* Top bar with view mode toggle */}
+              <div className="h-12 border-b flex items-center justify-center px-4 bg-background">
+                <ToggleGroup
+                  type="single"
+                  value={viewMode}
+                  onValueChange={(value) => value && setViewMode(value as ViewMode)}
+                  className="bg-muted rounded-lg p-1"
+                >
+                  <ToggleGroupItem
+                    value="editor"
+                    aria-label="Editor only"
+                    className="px-4 data-[state=on]:bg-background data-[state=on]:shadow-sm rounded-md"
+                  >
+                    <PanelLeft className="h-4 w-4 mr-2" />
+                    Document
+                  </ToggleGroupItem>
+                  <ToggleGroupItem
+                    value="both"
+                    aria-label="Both panels"
+                    className="px-4 data-[state=on]:bg-background data-[state=on]:shadow-sm rounded-md"
+                  >
+                    <Columns2 className="h-4 w-4 mr-2" />
+                    Both
+                  </ToggleGroupItem>
+                  <ToggleGroupItem
+                    value="canvas"
+                    aria-label="Canvas only"
+                    className="px-4 data-[state=on]:bg-background data-[state=on]:shadow-sm rounded-md"
+                  >
+                    <PanelRight className="h-4 w-4 mr-2" />
+                    Canvas
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
 
-            <ResizableHandle withHandle />
-
-            {/* Editor panel */}
-            <ResizablePanel defaultSize={40} minSize={25}>
-              {selectedNode ? (
-                <RichEditor
-                  key={selectedNodeId}
-                  content={selectedNode.content}
-                  onChange={(content) =>
-                    updateNode(selectedNodeId!, { content })
-                  }
-                  nodeTitle={selectedNode.title}
-                  onTitleChange={(title) =>
-                    updateNode(selectedNodeId!, { title })
-                  }
-                />
-              ) : (
-                <div className="h-full flex items-center justify-center text-muted-foreground">
-                  <p>Select a node to edit its content</p>
+              {/* Content area based on view mode */}
+              <div className="flex-1 overflow-hidden">
+                {viewMode === "both" ? (
+                  <ResizablePanelGroup direction="horizontal" className="h-full">
+                    <ResizablePanel defaultSize={60} minSize={30}>
+                      {renderCanvas()}
+                    </ResizablePanel>
+                    <ResizableHandle withHandle />
+                    <ResizablePanel defaultSize={40} minSize={25}>
+                      {renderEditor()}
+                    </ResizablePanel>
+                  </ResizablePanelGroup>
+                ) : viewMode === "canvas" ? (
+                  <div className="h-full">{renderCanvas()}</div>
+                ) : (
+                  <div className="h-full">{renderEditor()}</div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center space-y-4">
+                <Brain className="h-16 w-16 mx-auto text-muted-foreground/50" />
+                <div>
+                  <h2 className="text-xl font-semibold">No Mindmap Selected</h2>
+                  <p className="text-muted-foreground">
+                    Create or select a mindmap to get started
+                  </p>
                 </div>
-              )}
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center space-y-4">
-              <Brain className="h-16 w-16 mx-auto text-muted-foreground/50" />
-              <div>
-                <h2 className="text-xl font-semibold">No Mindmap Selected</h2>
-                <p className="text-muted-foreground">
-                  Create or select a mindmap to get started
-                </p>
               </div>
             </div>
-          </div>
-        )}
+          )}
         </div>
       </div>
     </TooltipProvider>
