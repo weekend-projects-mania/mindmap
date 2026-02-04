@@ -3,6 +3,7 @@ import { Mindmap, MindmapNode, FloatingNote } from "@/types/mindmap";
 import { MindmapNodeComponent } from "./MindmapNode";
 import { FloatingNoteComponent } from "./FloatingNoteComponent";
 import { cn } from "@/lib/utils";
+import { Maximize2 } from "lucide-react";
 
 interface MindmapCanvasProps {
   mindmap: Mindmap;
@@ -287,6 +288,55 @@ export const MindmapCanvas = ({
     ));
   };
 
+  // Fit to view - calculate bounds and adjust transform
+  const handleFitToView = useCallback(() => {
+    if (!containerRef.current) return;
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const padding = 60;
+
+    // Get all node positions from layout
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+    layout.forEach((node) => {
+      minX = Math.min(minX, node.x);
+      minY = Math.min(minY, node.y);
+      maxX = Math.max(maxX, node.x + node.width);
+      maxY = Math.max(maxY, node.y + node.height);
+    });
+
+    // Include floating notes
+    const floatingNotes = mindmap.floatingNotes || {};
+    Object.values(floatingNotes).forEach((note) => {
+      minX = Math.min(minX, note.position.x);
+      minY = Math.min(minY, note.position.y);
+      maxX = Math.max(maxX, note.position.x + 150); // Approximate width
+      maxY = Math.max(maxY, note.position.y + 30); // Approximate height
+    });
+
+    if (minX === Infinity) return; // No nodes
+
+    const contentWidth = maxX - minX;
+    const contentHeight = maxY - minY;
+
+    const availableWidth = rect.width - padding * 2;
+    const availableHeight = rect.height - padding * 2;
+
+    const scaleX = availableWidth / contentWidth;
+    const scaleY = availableHeight / contentHeight;
+    const newScale = Math.min(Math.max(Math.min(scaleX, scaleY), 0.25), 2);
+
+    // Center the content
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+
+    setTransform({
+      scale: newScale,
+      x: rect.width / 2 - centerX * newScale,
+      y: rect.height / 2 - centerY * newScale,
+    });
+  }, [layout, mindmap.floatingNotes]);
+
   return (
     <div
       ref={containerRef}
@@ -334,13 +384,22 @@ export const MindmapCanvas = ({
         {renderFloatingNotes()}
       </div>
 
-      {/* Zoom indicator */}
-      <div
-        className="absolute bottom-4 right-4 bg-card border rounded-md px-2 py-1 text-xs text-muted-foreground shadow-sm cursor-pointer hover:bg-accent transition-colors"
-        onClick={() => setTransform((prev) => ({ ...prev, scale: 1 }))}
-        title="Click to reset zoom"
-      >
-        {Math.round(transform.scale * 100)}%
+      {/* Zoom controls */}
+      <div className="absolute bottom-4 right-4 flex items-center gap-1">
+        <button
+          className="bg-card border rounded-md p-1.5 text-muted-foreground shadow-sm cursor-pointer hover:bg-accent transition-colors"
+          onClick={handleFitToView}
+          title="Fit to view"
+        >
+          <Maximize2 className="h-3.5 w-3.5" />
+        </button>
+        <div
+          className="bg-card border rounded-md px-2 py-1 text-xs text-muted-foreground shadow-sm cursor-pointer hover:bg-accent transition-colors"
+          onClick={() => setTransform((prev) => ({ ...prev, scale: 1 }))}
+          title="Click to reset zoom"
+        >
+          {Math.round(transform.scale * 100)}%
+        </div>
       </div>
     </div>
   );
