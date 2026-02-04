@@ -2,6 +2,7 @@ import { useEditor, EditorContent, Editor } from "@tiptap/react";
 import "./editor.css";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -196,6 +197,9 @@ export const RichEditor = ({ content, onChange, nodeTitle, onTitleChange }: Rich
         HTMLAttributes: {
           class: "text-primary underline cursor-pointer",
         },
+      }),
+      Placeholder.configure({
+        placeholder: "Type your notes here in markdown format...",
       }),
     ],
     content,
